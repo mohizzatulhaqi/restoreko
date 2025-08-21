@@ -22,9 +22,6 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RestaurantProvider>().fetchRestaurants();
-    });
   }
 
   @override

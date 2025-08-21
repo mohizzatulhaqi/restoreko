@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/restaurant.dart';
-import '../services/restaurant_service.dart';
+import '../providers/restaurant_detail_provider.dart';
 
 class ReviewForm extends StatefulWidget {
   final String restaurantId;
-  final Function(Restaurant, CustomerReview) onReviewSubmitted;
+  final VoidCallback? onSuccess;
 
   const ReviewForm({
     super.key,
     required this.restaurantId,
-    required this.onReviewSubmitted,
+    this.onSuccess,
   });
 
   @override
@@ -21,7 +20,7 @@ class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _reviewController = TextEditingController();
-  bool _isSubmitting = false;
+  // Submitting state is managed by Provider (RestaurantDetailProvider)
 
   @override
   void dispose() {
@@ -32,25 +31,14 @@ class _ReviewFormState extends State<ReviewForm> {
 
   Future<void> _submitReview() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
     try {
-      final restaurant = await context.read<RestaurantService>().submitReview(
-        id: widget.restaurantId,
-        name: _nameController.text.trim(),
-        review: _reviewController.text.trim(),
-      );
+      final ok = await context.read<RestaurantDetailProvider>().submitReview(
+            id: widget.restaurantId,
+            name: _nameController.text.trim(),
+            review: _reviewController.text.trim(),
+          );
 
-      if (mounted) {
-        final optimistic = CustomerReview(
-          name: _nameController.text.trim(),
-          review: _reviewController.text.trim(),
-          date: DateTime.now().toIso8601String(),
-        );
-        widget.onReviewSubmitted(restaurant, optimistic);
+      if (mounted && ok) {
         _nameController.clear();
         _reviewController.clear();
         FocusScope.of(context).unfocus();
@@ -61,26 +49,23 @@ class _ReviewFormState extends State<ReviewForm> {
             duration: Duration(seconds: 2),
           ),
         );
+        widget.onSuccess?.call();
       }
     } catch (e) {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Gagal mengirim ulasan: $errorMessage"),
           backgroundColor: Colors.redAccent,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isSubmitting = context.watch<RestaurantDetailProvider>().state.isSubmitting;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       elevation: 4,
@@ -164,7 +149,7 @@ class _ReviewFormState extends State<ReviewForm> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _isSubmitting ? null : _submitReview,
+                  onPressed: isSubmitting ? null : _submitReview,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange[600],
                     foregroundColor: Colors.white,
@@ -177,7 +162,7 @@ class _ReviewFormState extends State<ReviewForm> {
                     ),
                     elevation: 3,
                   ),
-                  icon: _isSubmitting
+                  icon: isSubmitting
                       ? const SizedBox(
                           width: 18,
                           height: 18,
@@ -190,7 +175,7 @@ class _ReviewFormState extends State<ReviewForm> {
                         )
                       : const Icon(Icons.send_rounded, size: 18),
                   label: Text(
-                    _isSubmitting ? 'Mengirim...' : 'Kirim Ulasan',
+                    isSubmitting ? 'Mengirim...' : 'Kirim Ulasan',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

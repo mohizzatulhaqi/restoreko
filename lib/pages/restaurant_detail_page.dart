@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/restaurant.dart';
 import '../models/menu_item.dart' as menu_item_model;
 import '../services/restaurant_service.dart';
+import '../providers/restaurant_detail_provider.dart';
 import '../widgets/review_form.dart';
 import '../widgets/menu/menu_section.dart';
 
@@ -19,235 +19,184 @@ class RestaurantDetailPage extends StatefulWidget {
 }
 
 class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
-  late Future<Restaurant> _restaurantFuture;
-  late final RestaurantService _service;
-  final ScrollController _scrollController = ScrollController();
-  Restaurant? _restaurantOverride;
-
   @override
   void initState() {
     super.initState();
-    _service = Provider.of<RestaurantService>(context, listen: false);
-    _loadRestaurant();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _loadRestaurant() {
-    setState(() {
-      _restaurantFuture = _service.fetchRestaurantDetail(widget.restaurantId);
-      _restaurantOverride = null;
-    });
-  }
-
-  void _scrollToReviews() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _handleReviewSubmitted(
-    Restaurant updatedRestaurant,
-    CustomerReview optimistic,
-  ) {
-    setState(() {
-      final existing = List<CustomerReview>.from(
-        updatedRestaurant.customerReviews,
-      );
-      final alreadyExists = existing.any(
-        (r) => r.name == optimistic.name && r.review == optimistic.review,
-      );
-      if (!alreadyExists) {
-        existing.add(optimistic);
-      }
-
-      final merged = Restaurant(
-        id: updatedRestaurant.id,
-        name: updatedRestaurant.name,
-        description: updatedRestaurant.description,
-        pictureId: updatedRestaurant.pictureId,
-        city: updatedRestaurant.city,
-        address: updatedRestaurant.address,
-        rating: updatedRestaurant.rating,
-        menu: updatedRestaurant.menu,
-        categories: updatedRestaurant.categories,
-        customerReviews: existing,
-        isFavorite: updatedRestaurant.isFavorite,
-      );
-
-      _restaurantFuture = Future.value(merged);
-      _restaurantOverride = merged;
-    });
-    _scrollToReviews();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<Restaurant>(
-        future: _restaurantFuture,
-        builder: (context, snapshot) {
-          if (_restaurantOverride != null) {
-            final restaurant = _restaurantOverride!;
-            return _buildContent(restaurant);
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              !snapshot.hasData) {
-            return Skeletonizer(
-              child: CustomScrollView(
-                slivers: [
-                  const SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 250,
-                      child: ColoredBox(color: Color(0xFFE0E0E0)),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 20,
-                            width: 200,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
+    return ChangeNotifierProvider<RestaurantDetailProvider>(
+      create: (context) =>
+          RestaurantDetailProvider(service: context.read<RestaurantService>())
+            ..load(widget.restaurantId),
+      builder: (context, child) {
+        return Scaffold(
+          body: Consumer<RestaurantDetailProvider>(
+            builder: (context, provider, _) {
+              final state = provider.state;
+              if (state.isLoading && state.restaurant == null) {
+                return Skeletonizer(
+                  child: CustomScrollView(
+                    slivers: [
+                      const SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 250,
+                          child: ColoredBox(color: Color(0xFFE0E0E0)),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                width: 16,
-                                height: 16,
+                                height: 20,
+                                width: 200,
                                 color: Colors.grey[300],
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Container(
-                                  height: 14,
-                                  color: Colors.grey[300],
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 16,
+                                    height: 16,
+                                    color: Colors.grey[300],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Container(
+                                      height: 14,
+                                      color: Colors.grey[300],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 40,
+                                    height: 14,
+                                    color: Colors.grey[300],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: List.generate(
+                                  3,
+                                  (i) => Container(
+                                    width: 70,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 16),
                               Container(
-                                width: 40,
-                                height: 14,
+                                height: 18,
+                                width: 100,
                                 color: Colors.grey[300],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: List.generate(
-                              3,
-                              (i) => Container(
-                                width: 70,
-                                height: 28,
+                              const SizedBox(height: 8),
+                              Container(height: 14, color: Colors.grey[300]),
+                              const SizedBox(height: 6),
+                              Container(
+                                height: 14,
+                                width: 280,
+                                color: Colors.grey[300],
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 18,
+                                width: 80,
+                                color: Colors.grey[300],
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 120,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[300],
+                                  color: Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFE3F2FD),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 18,
-                            width: 100,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 8),
-                          Container(height: 14, color: Colors.grey[300]),
-                          const SizedBox(height: 6),
-                          Container(
-                            height: 14,
-                            width: 280,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 18,
-                            width: 80,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 8),
-                          const Divider(),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFE3F2FD),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 160,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 18,
-                            width: 160,
-                            color: Colors.grey[300],
-                          ),
-                          const SizedBox(height: 8),
-                          const Divider(),
-                          const SizedBox(height: 8),
-                          ...List.generate(
-                            3,
-                            (i) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: Container(
-                                height: 80,
-                                color: Colors.grey[200],
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 18,
+                                width: 160,
+                                color: Colors.grey[300],
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              ...List.generate(
+                                3,
+                                (i) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12.0),
+                                  child: Container(
+                                    height: 80,
+                                    color: Colors.grey[200],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('Restoran tidak ditemukan'));
-          }
-          return _buildContent(snapshot.data!);
-        },
-      ),
+                );
+              }
+              if (state.error != null && state.restaurant == null) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [Text('Error: ${state.error}')],
+                  ),
+                );
+              }
+              final restaurant = state.restaurant;
+              if (restaurant == null) {
+                return const Center(child: Text('Restoran tidak ditemukan'));
+              }
+              return _buildContent(context, restaurant);
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildContent(Restaurant restaurant) {
+  Widget _buildContent(BuildContext ctx, Restaurant restaurant) {
+    final detailProvider = Provider.of<RestaurantDetailProvider>(ctx, listen: false);
     return CustomScrollView(
+      controller: detailProvider.scrollController,
       slivers: [
         SliverAppBar(
           expandedHeight: 250,
@@ -266,7 +215,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       Shadow(
                         offset: const Offset(1, 1),
                         blurRadius: 3.0,
-                        // ignore: deprecated_member_use
                         color: Colors.black.withOpacity(0.5),
                       ),
                     ],
@@ -379,7 +327,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 const SizedBox(height: 16),
                 ReviewForm(
                   restaurantId: restaurant.id,
-                  onReviewSubmitted: _handleReviewSubmitted,
+                  onSuccess: () {
+                    Provider.of<RestaurantDetailProvider>(ctx, listen: false)
+                        .scrollToBottom();
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -407,7 +358,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   )
                 else
                   ...restaurant.customerReviews
-                      .map((review) => _buildReviewCard(review))
+                      .map((review) => _buildReviewCard(ctx, review))
                       .toList(),
               ],
             ),
@@ -427,7 +378,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     );
   }
 
-  Widget _buildReviewCard(CustomerReview review) {
+  Widget _buildReviewCard(BuildContext ctx, CustomerReview review) {
+    final detailProvider = Provider.of<RestaurantDetailProvider>(ctx, listen: false);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -454,7 +406,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         ),
                       ),
                       Text(
-                        _formatDate(review.date),
+                        detailProvider.formatDate(review.date),
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
@@ -468,14 +420,5 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
         ),
       ),
     );
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('dd MM yy', 'id_ID').format(date);
-    } catch (e) {
-      return dateString;
-    }
   }
 }
