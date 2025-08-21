@@ -1,0 +1,10 @@
+# Ensure GitHub Linguist counts only Dart files toward language stats
+# Turn off detection for everything by default
+* linguist-detectable=false
+
+# Enable detection for Dart files only
+*.dart linguist-detectable=true
+*.dart linguist-language=Dart
+
+# Keep docs recognized as documentation (doesn't affect language %)
+*.md linguist-documentation
