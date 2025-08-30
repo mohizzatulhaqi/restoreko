@@ -182,11 +182,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: Colors.red,
-                        ),
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
                         const SizedBox(height: 16),
                         Text(
                           'Terjadi Kesalahan',
@@ -196,10 +192,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Tidak dapat memuat detail restoran. Silakan coba lagi nanti.',
+                        const Text(
+                          'Gagal memuat data. Silakan periksa koneksi internet Anda.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: Colors.grey),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
@@ -211,6 +207,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           },
                           icon: const Icon(Icons.refresh),
                           label: const Text('Coba Lagi'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange[800],
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ],
                     ),
