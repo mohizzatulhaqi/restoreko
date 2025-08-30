@@ -25,7 +25,18 @@ class FavoriteButton extends StatelessWidget {
           isFavorite ? Icons.favorite : Icons.favorite_border,
           color: Colors.red,
         ),
-        onPressed: onTap,
+        onPressed: () {
+          onTap();
+          final message = isFavorite
+              ? 'Dihapus dari favorit'
+              : 'Ditambahkan ke favorit';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        },
       ),
     );
   }
