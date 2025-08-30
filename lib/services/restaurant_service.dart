@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../models/api_result.dart';
-import '../models/restaurant.dart';
+import '../models/restaurant.dart' show Restaurant;
 
 class RestaurantService {
   static const String baseUrl = 'https://restaurant-api.dicoding.dev';
@@ -51,27 +53,27 @@ class RestaurantService {
     required String review,
   }) async {
     try {
-
       final response = await http
           .post(
             Uri.parse('$baseUrl/review'),
             headers: {'Content-Type': 'application/json'},
-            body: json.encode({'id': id, 'name': name, 'review': review}),
+            body: json.encode({
+              'id': id,
+              'name': name,
+              'review': review,
+            }),
           )
           .timeout(const Duration(seconds: 10));
 
-
       if (response.statusCode == 201 || response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-
-        if (data['error'] == false) {
-          if (data['customerReviews'] != null) {
-            return fetchRestaurantDetail(id);
-          }
-          throw Exception('Invalid response format: customerReviews is null');
-        } else {
-          throw Exception(data['message'] ?? 'Gagal memberikan ulasan');
+        
+        if (data['error'] == false && data['customerReviews'] != null) {
+          // Fetch the latest restaurant data
+          final updatedRestaurant = await fetchRestaurantDetail(id);
+          return updatedRestaurant;
         }
+        throw Exception('Gagal memuat ulasan terbaru');
       } else if (response.statusCode == 400) {
         throw Exception('Permintaan tidak valid. Silakan periksa input Anda.');
       } else if (response.statusCode == 401 || response.statusCode == 403) {

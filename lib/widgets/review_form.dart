@@ -6,11 +6,7 @@ class ReviewForm extends StatefulWidget {
   final String restaurantId;
   final VoidCallback? onSuccess;
 
-  const ReviewForm({
-    super.key,
-    required this.restaurantId,
-    this.onSuccess,
-  });
+  const ReviewForm({super.key, required this.restaurantId, this.onSuccess});
 
   @override
   _ReviewFormState createState() => _ReviewFormState();
@@ -32,15 +28,16 @@ class _ReviewFormState extends State<ReviewForm> {
     if (!_formKey.currentState!.validate()) return;
     try {
       final ok = await context.read<RestaurantDetailProvider>().submitReview(
-            id: widget.restaurantId,
-            name: _nameController.text.trim(),
-            review: _reviewController.text.trim(),
-          );
+        id: widget.restaurantId,
+        name: _nameController.text.trim(),
+        review: _reviewController.text.trim(),
+      );
 
       if (mounted && ok) {
         _nameController.clear();
         _reviewController.clear();
         FocusScope.of(context).unfocus();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Ulasan berhasil dikirim!"),
@@ -48,7 +45,14 @@ class _ReviewFormState extends State<ReviewForm> {
             duration: Duration(seconds: 2),
           ),
         );
-        widget.onSuccess?.call();
+
+        await context.read<RestaurantDetailProvider>().load(
+          widget.restaurantId,
+        );
+
+        if (widget.onSuccess != null) {
+          widget.onSuccess!();
+        }
       }
     } catch (e) {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
@@ -64,7 +68,10 @@ class _ReviewFormState extends State<ReviewForm> {
 
   @override
   Widget build(BuildContext context) {
-    final isSubmitting = context.watch<RestaurantDetailProvider>().state.isSubmitting;
+    final isSubmitting = context
+        .watch<RestaurantDetailProvider>()
+        .state
+        .isSubmitting;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       elevation: 4,
@@ -99,7 +106,10 @@ class _ReviewFormState extends State<ReviewForm> {
                   labelText: 'Nama Anda',
                   filled: true,
                   fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Colors.black54,
+                  ),
                   labelStyle: const TextStyle(color: Colors.black54),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -127,7 +137,10 @@ class _ReviewFormState extends State<ReviewForm> {
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(Icons.message_outlined, color: Colors.black54),
+                  prefixIcon: const Icon(
+                    Icons.message_outlined,
+                    color: Colors.black54,
+                  ),
                   labelStyle: const TextStyle(color: Colors.black54),
                   helperStyle: const TextStyle(color: Colors.black54),
                   helperText: 'Input Maksimal 200 karakter',
