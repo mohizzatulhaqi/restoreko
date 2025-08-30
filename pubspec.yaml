@@ -44,6 +44,7 @@ dependencies:
   path: ^1.9.1
   collection: ^1.18.0
   shared_preferences: ^2.5.3 
+  flutter_local_notifications: ^19.4.1
 
 dev_dependencies:
   flutter_test:
