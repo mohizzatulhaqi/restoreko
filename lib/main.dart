@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:restoreko/pages/favorite_restaurant_page.dart';
+import 'package:restoreko/pages/setting_page.dart';
 import 'pages/restaurant_list_page.dart';
 import 'providers/restaurant_provider.dart';
 import 'providers/restaurant_detail_provider.dart';
@@ -148,6 +150,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _pages = [
     const RestaurantListPage(),
+    const FavoritesPage(),
+    const SettingsPage(),
   ];
 
   @override
