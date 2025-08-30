@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorite_provider.dart';
-import '../services/restaurant_service.dart';
 import '../models/restaurant.dart';
 import 'restaurant_detail_page.dart';
 
@@ -14,84 +13,23 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
-  final RestaurantService _restaurantService = RestaurantService();
-  List<Restaurant> _favoriteRestaurants = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
-    _loadFavorites();
-
-    // Listen to changes in the FavoriteProvider
-    final favoriteProvider = Provider.of<FavoriteProvider>(
-      context,
-      listen: false,
-    );
-    favoriteProvider.addListener(_onFavoritesChanged);
-  }
-
-  @override
-  void dispose() {
-    // Remove the listener when the widget is disposed
-    final favoriteProvider = Provider.of<FavoriteProvider>(
-      context,
-      listen: false,
-    );
-    favoriteProvider.removeListener(_onFavoritesChanged);
-    super.dispose();
-  }
-
-  void _onFavoritesChanged() {
-    // When favorites change, reload the list
-    _loadFavorites();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadFavorites();
+    });
   }
 
   Future<void> _loadFavorites() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+    if (!mounted) return;
+    
     try {
-      final favoriteProvider = Provider.of<FavoriteProvider>(
-        context,
-        listen: false,
-      );
-      final favoriteIds = favoriteProvider.allFavorites;
-
-      if (favoriteIds.isEmpty) {
-        setState(() {
-          _favoriteRestaurants = [];
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final List<Restaurant> restaurants = [];
-      for (final id in favoriteIds) {
-        try {
-          debugPrint('Fetching details for restaurant ID: $id');
-          final restaurant = await _restaurantService.fetchRestaurantDetail(id);
-          debugPrint(
-            'Successfully loaded restaurant: ${restaurant.name} (ID: $id)',
-          );
-          restaurants.add(restaurant);
-        } catch (e) {
-          debugPrint('Error loading restaurant $id: $e');
-        }
-      }
-
-      setState(() {
-        _favoriteRestaurants = restaurants;
-        _isLoading = false;
-      });
+      final provider = Provider.of<FavoriteProvider>(context, listen: false);
+      await provider.loadFavorites();
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal memuat restoran favorit';
-        _isLoading = false;
-      });
+      if (!mounted) return;
+      debugPrint('Error loading favorites: $e');
     }
   }
 
@@ -134,14 +72,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
 
           Consumer<FavoriteProvider>(
-            builder: (context, favoriteProvider, _) {
-              if (_isLoading) {
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
                 return const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
-
-              if (_errorMessage != null) {
+              
+              if (provider.error != null) {
                 return SliverFillRemaining(
                   child: Center(
                     child: Padding(
@@ -156,7 +94,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _errorMessage!,
+                            'Gagal memuat restoran favorit: ${provider.error}',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.red,
@@ -175,7 +113,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 );
               }
 
-              if (_favoriteRestaurants.isEmpty) {
+              // Show empty state if no favorites
+              if (provider.favorites.isEmpty) {
                 return SliverFillRemaining(
                   child: Center(
                     child: Column(
@@ -210,11 +149,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 );
               }
 
+              // Show list of favorite restaurants
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final restaurant = _favoriteRestaurants[index];
+                  final restaurant = provider.favorites[index];
                   return _buildRestaurantItem(context, restaurant);
-                }, childCount: _favoriteRestaurants.length),
+                }, childCount: provider.favorites.length),
               );
             },
           ),
@@ -226,6 +166,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget _buildRestaurantItem(BuildContext context, Restaurant restaurant) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -363,15 +307,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
             ),
             IconButton(
               icon: const Icon(Icons.favorite, color: Colors.red),
-              onPressed: () {
+              onPressed: () async {
                 final favoriteProvider = Provider.of<FavoriteProvider>(
                   context,
                   listen: false,
                 );
-                favoriteProvider.toggleFavorite(restaurant.id);
-                _loadFavorites(); // Refresh the list after removing
+                await favoriteProvider.toggleFavorite(restaurant);
+                if (mounted) {
+                  await _loadFavorites(); // Refresh the list after removing
+                }
                 
-                // Show snackbar when removed from favorites
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('${restaurant.name} dihapus dari favorit'),
@@ -384,8 +329,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       label: 'BATAL',
                       textColor: Colors.orange,
                       onPressed: () {
-                        // Add back to favorites if undo is pressed
-                        favoriteProvider.toggleFavorite(restaurant.id);
+                        favoriteProvider.toggleFavorite(restaurant);
                         _loadFavorites();
                       },
                     ),

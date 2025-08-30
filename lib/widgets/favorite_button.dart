@@ -33,31 +33,28 @@ class FavoriteButton extends StatelessWidget {
               ? '${restaurantName ?? 'Restoran'} dihapus dari favorit'
               : '${restaurantName ?? 'Restoran'} ditambahkan ke favorit';
               
+          final duration = isFavorite ? 2 : 3;
           final controller = ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: duration),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              action: isFavorite
-                  ? SnackBarAction(
-                      label: 'BATAL',
-                      textColor: Colors.orange,
-                      onPressed: () {
-                        // Call onTap again to toggle back
-                        onTap();
-                      },
-                    )
-                  : null,
+              action: SnackBarAction(
+                label: 'BATAL',
+                textColor: Colors.orange,
+                onPressed: () {
+                  onTap();
+                },
+              ),
             ),
           );
           
-          // Handle the case where the snackbar is dismissed without pressing the action
           controller.closed.then((SnackBarClosedReason reason) {
-            if (reason == SnackBarClosedReason.timeout && isFavorite) {
-              // The snackbar was dismissed by timeout, no action needed
+            if (reason == SnackBarClosedReason.timeout) {
+              // Perform any action when snackbar is dismissed by timeout
             }
           });
         },

@@ -129,7 +129,22 @@ class Restaurant {
       customerReviews: (json['customerReviews'] as List<dynamic>? ?? [])
           .map((e) => CustomerReview.fromJson(e as Map<String, dynamic>))
           .toList(),
+      isFavorite: json['isFavorite'] == true,
     );
+  }
+
+  // Convert Restaurant to a Map for database storage
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'pictureId': pictureId,
+      'city': city,
+      'rating': rating,
+      // Note: We're not storing menus, categories, and reviews in the favorites table
+      // to keep it simple. These will be fetched from the API when viewing details.
+    };
   }
 }
 

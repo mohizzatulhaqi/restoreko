@@ -7,9 +7,21 @@ import 'pages/restaurant_list_page.dart';
 import 'providers/restaurant_provider.dart';
 import 'providers/restaurant_detail_provider.dart';
 import 'services/restaurant_service.dart';
-import 'providers/favorite_provider.dart';
+import 'package:restoreko/providers/favorite_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:restoreko/database/database_helper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.database; 
+    debugPrint('Database initialized successfully');
+  } catch (e) {
+    debugPrint('Failed to initialize database: $e');
+  }
+  
   runApp(MyApp());
 }
 

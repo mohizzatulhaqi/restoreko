@@ -243,13 +243,19 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
           actions: [
             Consumer<FavoriteProvider>(
               builder: (context, favProvider, _) {
-                final isFav = favProvider.isFavorite(restaurant.id);
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12, top: 2),
-                  child: FavoriteButton(
-                    isFavorite: isFav,
-                    onTap: () => favProvider.toggleFavorite(restaurant.id),
-                  ),
+                return FutureBuilder<bool>(
+                  future: favProvider.isFavorite(restaurant.id),
+                  builder: (context, snapshot) {
+                    final isFav = snapshot.data ?? false;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12, top: 2),
+                      child: FavoriteButton(
+                        isFavorite: isFav,
+                        onTap: () => favProvider.toggleFavorite(restaurant),
+                        restaurantName: restaurant.name,
+                      ),
+                    );
+                  },
                 );
               },
             ),
