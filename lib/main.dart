@@ -29,15 +29,21 @@ class MyApp extends StatelessWidget {
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
 
     final restaurantService = RestaurantService();
-    
+
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => RestaurantProvider(service: restaurantService)
-            ..fetchRestaurants(),
+        Provider<RestaurantService>(
+          create: (_) => restaurantService,
         ),
         ChangeNotifierProvider(
-          create: (_) => RestaurantDetailProvider(service: restaurantService),
+          create: (context) => RestaurantProvider(
+            service: context.read<RestaurantService>(),
+          )..fetchRestaurants(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => RestaurantDetailProvider(
+            service: context.read<RestaurantService>(),
+          ),
         ),
       ],
       child: MaterialApp(
@@ -124,7 +130,79 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: RestaurantListPage(),
+        home: MainNavigation(),
+      ),
+    );
+  }
+}
+
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({super.key});
+
+  @override
+  State<MainNavigation> createState() => _MainNavigationState();
+}
+
+class _MainNavigationState extends State<MainNavigation> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const RestaurantListPage(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _currentIndex, children: _pages),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Colors.grey[600],
+          selectedLabelStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w400,
+            fontSize: 12,
+          ),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.restaurant),
+              activeIcon: Icon(Icons.restaurant),
+              label: 'Restoran',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite),
+              label: 'Favorit',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_outlined),
+              activeIcon: Icon(Icons.settings),
+              label: 'Pengaturan',
+            ),
+          ],
+        ),
       ),
     );
   }
