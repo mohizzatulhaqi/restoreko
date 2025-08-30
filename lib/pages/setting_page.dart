@@ -7,7 +7,7 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -43,7 +43,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          
+
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
@@ -63,19 +63,10 @@ class SettingsPage extends StatelessWidget {
                       activeColor: Colors.orange[800],
                     ),
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.text_fields,
-                    title: 'Ukuran Font',
-                    subtitle: 'Normal',
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navigate to font size settings
-                    },
-                  ),
                 ]),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Notifications Section
                 _buildSectionHeader('Notifikasi'),
                 _buildSettingsCard([
@@ -91,55 +82,9 @@ class SettingsPage extends StatelessWidget {
                       activeColor: Colors.orange[800],
                     ),
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.location_on_outlined,
-                    title: 'Rekomendasi Lokasi',
-                    subtitle: 'Berdasarkan lokasi Anda',
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) {
-                        // Implementasi untuk lokasi
-                      },
-                      activeColor: Colors.orange[800],
-                    ),
-                  ),
                 ]),
-                
+
                 const SizedBox(height: 16),
-                
-                // About Section
-                _buildSectionHeader('Tentang'),
-                _buildSettingsCard([
-                  _buildSettingsTile(
-                    icon: Icons.info_outlined,
-                    title: 'Tentang Aplikasi',
-                    subtitle: 'Versi 1.0.0',
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      _showAboutDialog(context);
-                    },
-                  ),
-                  _buildSettingsTile(
-                    icon: Icons.privacy_tip_outlined,
-                    title: 'Kebijakan Privasi',
-                    subtitle: 'Pelajari cara kami melindungi data Anda',
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navigate to privacy policy
-                    },
-                  ),
-                  _buildSettingsTile(
-                    icon: Icons.help_outline,
-                    title: 'Bantuan & Dukungan',
-                    subtitle: 'FAQ dan hubungi kami',
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navigate to help page
-                    },
-                  ),
-                ]),
-                
-                const SizedBox(height: 32),
               ]),
             ),
           ),
@@ -165,9 +110,7 @@ class SettingsPage extends StatelessWidget {
   Widget _buildSettingsCard(List<Widget> children) {
     return Card(
       margin: EdgeInsets.zero,
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -179,79 +122,18 @@ class SettingsPage extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.orange[800],
-        size: 24,
-      ),
+      leading: Icon(icon, color: Colors.orange[800], size: 24),
       title: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w500,
-          fontSize: 16,
-        ),
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16),
       ),
       subtitle: Text(
         subtitle,
-        style: GoogleFonts.poppins(
-          fontSize: 13,
-          color: Colors.grey[600],
-        ),
+        style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
       ),
       trailing: trailing,
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Tentang Restoreko',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Restoreko adalah aplikasi rekomendasi restoran terbaik untuk membantu Anda menemukan tempat makan yang sempurna.',
-                style: GoogleFonts.poppins(),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Versi: 1.0.0',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
-                ),
-              ),
-              Text(
-                'Dikembangkan dengan ❤️',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Tutup',
-                style: GoogleFonts.poppins(
-                  color: Colors.orange[800],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
