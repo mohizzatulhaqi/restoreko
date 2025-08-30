@@ -14,12 +14,18 @@ class FavoriteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(
+            color: isDark ? Colors.black54 : Colors.black26, 
+            blurRadius: 4, 
+            offset: const Offset(0, 2)
+          ),
         ],
       ),
       child: IconButton(
@@ -36,7 +42,13 @@ class FavoriteButton extends StatelessWidget {
           final duration = isFavorite ? 2 : 3;
           final controller = ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(message),
+              content: Text(
+                message,
+                style: TextStyle(
+                  color: isDark ? Colors.black : null,
+                ),
+              ),
+              backgroundColor: isDark ? Colors.grey[300] : null,
               duration: Duration(seconds: duration),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

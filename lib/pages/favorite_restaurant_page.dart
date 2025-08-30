@@ -35,8 +35,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final backgroundColor = brightness == Brightness.dark 
+        ? Theme.of(context).scaffoldBackgroundColor 
+        : Colors.grey[50];
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -317,14 +322,21 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   await _loadFavorites(); // Refresh the list after removing
                 }
                 
-                ScaffoldMessenger.of(context).showSnackBar(
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${restaurant.name} dihapus dari favorit'),
-                    duration: const Duration(seconds: 2),
+                    content: Text(
+                      '${restaurant.name} dihapus dari favorit',
+                      style: TextStyle(
+                        color: isDark ? Colors.black : null,
+                      ),
+                    ),
+                    backgroundColor: isDark ? Colors.grey[300] : null,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    duration: const Duration(seconds: 2),
                     action: SnackBarAction(
                       label: 'BATAL',
                       textColor: Colors.orange,

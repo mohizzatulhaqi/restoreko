@@ -16,17 +16,24 @@ class SearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? Colors.grey[800] : Colors.orange[50];
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final iconColor = isDark ? Colors.grey[300] : Colors.grey[600];
+    final hintColor = isDark ? Colors.grey[400] : Colors.grey[500];
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
@@ -34,15 +41,16 @@ class SearchBarWidget extends StatelessWidget {
         controller: controller,
         onSubmitted: onSubmitted,
         onChanged: onChanged,
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           filled: true,
-          fillColor: Colors.orange[50],
+          fillColor: isDark ? Colors.grey[850] : backgroundColor,
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey[500]),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+          hintStyle: TextStyle(color: hintColor),
+          prefixIcon: Icon(Icons.search, color: iconColor),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear, color: Colors.grey[600]),
+                  icon: Icon(Icons.clear, color: iconColor),
                   onPressed: () {
                     controller.clear();
                     onSubmitted('');
@@ -51,15 +59,23 @@ class SearchBarWidget extends StatelessWidget {
               : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+            borderSide: isDark 
+                ? BorderSide(color: Colors.grey[700]!)
+                : BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.orange.shade200, width: 1),
+            borderSide: BorderSide(
+              color: isDark ? Colors.grey[700]! : Colors.orange.shade200, 
+              width: 1
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.orange.shade400, width: 2),
+            borderSide: BorderSide(
+              color: isDark ? Colors.orange[400]! : Colors.orange.shade400, 
+              width: 2
+            ),
           ),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16,

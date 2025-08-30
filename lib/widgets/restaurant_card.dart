@@ -9,15 +9,21 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subTextColor = isDark ? Colors.white70 : Colors.grey[600];
+    
     return Container(
       height: 140,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
             blurRadius: 15,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
             spreadRadius: 0,
           ),
         ],
@@ -26,7 +32,7 @@ class RestaurantCard extends StatelessWidget {
         margin: EdgeInsets.zero,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.white,
+        color: cardColor,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
@@ -61,7 +67,7 @@ class RestaurantCard extends StatelessWidget {
                                   Text(
                                     'Tidak ada gambar',
                                     style: TextStyle(
-                                      color: Colors.grey[500],
+                                      color: subTextColor,
                                       fontSize: 10,
                                     ),
                                   ),
@@ -100,7 +106,7 @@ class RestaurantCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+                              color: isDark ? Colors.black : textColor,
                             ),
                           ),
                         ],
@@ -125,11 +131,10 @@ class RestaurantCard extends StatelessWidget {
                             restaurant.name,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
-                              height: 1.3,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
                             ),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -149,8 +154,8 @@ class RestaurantCard extends StatelessWidget {
                             child: Text(
                               restaurant.city,
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
+                                fontSize: 12,
+                                color: subTextColor,
                                 fontWeight: FontWeight.w500,
                               ),
                               overflow: TextOverflow.ellipsis,

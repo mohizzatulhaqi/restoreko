@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:restoreko/providers/theme_provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final brightness = Theme.of(context).brightness;
+    final backgroundColor = brightness == Brightness.dark 
+        ? Theme.of(context).scaffoldBackgroundColor 
+        : Colors.grey[50];
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -48,7 +53,6 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Appearance Section
                 _buildSectionHeader('Tampilan'),
                 _buildSettingsCard([
                   _buildSettingsTile(
@@ -56,9 +60,9 @@ class SettingsPage extends StatelessWidget {
                     title: 'Mode Gelap',
                     subtitle: 'Sesuaikan dengan sistem',
                     trailing: Switch(
-                      value: isDarkMode,
+                      value: context.watch<ThemeProvider>().isDarkMode,
                       onChanged: (value) {
-                        // Implementasi untuk mengubah tema
+                        context.read<ThemeProvider>().toggleTheme(value);
                       },
                       activeColor: Colors.orange[800],
                     ),

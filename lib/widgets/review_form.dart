@@ -20,7 +20,6 @@ class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _reviewController = TextEditingController();
-  // Submitting state is managed by Provider (RestaurantDetailProvider)
 
   @override
   void dispose() {
@@ -95,11 +94,13 @@ class _ReviewFormState extends State<ReviewForm> {
 
               TextFormField(
                 controller: _nameController,
+                style: const TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   labelText: 'Nama Anda',
                   filled: true,
                   fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(Icons.person_outline),
+                  prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
+                  labelStyle: const TextStyle(color: Colors.black54),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -118,6 +119,7 @@ class _ReviewFormState extends State<ReviewForm> {
               const SizedBox(height: 14),
               TextFormField(
                 controller: _reviewController,
+                style: const TextStyle(color: Colors.black),
                 maxLines: 4,
                 maxLength: 200,
                 decoration: InputDecoration(
@@ -125,7 +127,9 @@ class _ReviewFormState extends State<ReviewForm> {
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(Icons.message_outlined),
+                  prefixIcon: const Icon(Icons.message_outlined, color: Colors.black54),
+                  labelStyle: const TextStyle(color: Colors.black54),
+                  helperStyle: const TextStyle(color: Colors.black54),
                   helperText: 'Input Maksimal 200 karakter',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),

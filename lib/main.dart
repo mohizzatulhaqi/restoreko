@@ -8,21 +8,21 @@ import 'providers/restaurant_provider.dart';
 import 'providers/restaurant_detail_provider.dart';
 import 'services/restaurant_service.dart';
 import 'package:restoreko/providers/favorite_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:restoreko/database/database_helper.dart';
+import 'package:restoreko/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     final dbHelper = DatabaseHelper();
-    await dbHelper.database; 
+    await dbHelper.database;
     debugPrint('Database initialized successfully');
   } catch (e) {
     debugPrint('Failed to initialize database: $e');
   }
-  
-  runApp(MyApp());
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const brandColor = Color(0xFFFF6F00);
+
     final lightScheme = ColorScheme.fromSeed(
       seedColor: brandColor,
       brightness: Brightness.light,
@@ -59,92 +60,101 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ), 
       ],
-      child: MaterialApp(
-        title: 'Restoreko',
-        debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.system,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: lightScheme,
-          scaffoldBackgroundColor: const Color(0xFFF8F8F8),
-          textTheme: baseTextTheme,
-          appBarTheme: AppBarTheme(
-            backgroundColor: lightScheme.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: false,
-            titleTextStyle: baseTextTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          cardTheme: CardThemeData(
-            color: Colors.white,
-            elevation: 0,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: lightScheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Restoreko',
+            debugShowCheckedModeBanner: false,
+            themeMode: themeProvider.isDarkMode
+                ? ThemeMode.dark
+                : ThemeMode.light,
+            theme: ThemeData(
+              useMaterial3: true,
+              colorScheme: lightScheme,
+              scaffoldBackgroundColor: const Color(0xFFF8F8F8),
+              textTheme: baseTextTheme,
+              appBarTheme: AppBarTheme(
+                backgroundColor: lightScheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                centerTitle: false,
+                titleTextStyle: baseTextTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              cardTheme: CardThemeData(
+                color: Colors.white,
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: lightScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          colorScheme: darkScheme,
-          scaffoldBackgroundColor: const Color(0xFF111315),
-          textTheme: GoogleFonts.poppinsTextTheme(
-            ThemeData(brightness: Brightness.dark).textTheme,
-          ),
-          appBarTheme: AppBarTheme(
-            backgroundColor: darkScheme.surface,
-            foregroundColor: darkScheme.onSurface,
-            elevation: 0,
-            centerTitle: false,
-          ),
-          cardTheme: CardThemeData(
-            color: darkScheme.surface,
-            elevation: 0,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: darkScheme.primary,
-              foregroundColor: darkScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              colorScheme: darkScheme,
+              scaffoldBackgroundColor: const Color(0xFF111315),
+              textTheme: GoogleFonts.poppinsTextTheme(
+                ThemeData(brightness: Brightness.dark).textTheme,
+              ),
+              appBarTheme: AppBarTheme(
+                backgroundColor: darkScheme.surface,
+                foregroundColor: darkScheme.onSurface,
+                elevation: 0,
+                centerTitle: false,
+              ),
+              cardTheme: CardThemeData(
+                color: darkScheme.surface,
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: darkScheme.primary,
+                  foregroundColor: darkScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: darkScheme.surfaceVariant,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: darkScheme.surfaceVariant,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        home: MainNavigation(),
+            home: const MainNavigation(),
+          );
+        },
       ),
     );
   }

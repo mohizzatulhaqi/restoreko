@@ -20,6 +20,14 @@ class MenuSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? Colors.grey[900] : Colors.orange[50];
+    final iconBackground = isDark ? Colors.grey[800] : Colors.orange[100];
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final shadowColor = isDark ? Colors.black.withOpacity(0.3) : Colors.orange.withOpacity(0.1);
+    final accentColor = isDark ? Colors.orange[300] : Colors.orange[600];
+    final cardColor = isDark ? Colors.grey[800] : this.cardColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,15 +36,11 @@ class MenuSection extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.orange.shade50, Colors.orange.shade100],
-            ),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.1),
+                color: shadowColor,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -47,21 +51,21 @@ class MenuSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
+                  color: iconBackground,
+                  borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Colors.orange.shade400, Colors.orange.shade600],
+                    colors: isDark 
+                        ? [Colors.grey[700]!, Colors.grey[800]!]
+                        : [Colors.orange.shade400, Colors.orange.shade600],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
+                child: Icon(
+                  icon,
+                  color: isDark ? Colors.orange[300] : Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -71,10 +75,9 @@ class MenuSection extends StatelessWidget {
                     Text(
                       title,
                       style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[800],
-                        letterSpacing: 0.5,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -83,7 +86,7 @@ class MenuSection extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.orange[600],
+                        color: accentColor,
                       ),
                     ),
                   ],
@@ -110,7 +113,7 @@ class MenuSection extends StatelessWidget {
                 duration: Duration(milliseconds: 200 + (index * 50)),
                 child: MenuItemCard(
                   item: items[index],
-                  backgroundColor: cardColor,
+                  backgroundColor: cardColor!,
                   icon: icon,
                 ),
               );

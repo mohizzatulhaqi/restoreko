@@ -46,9 +46,15 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<RestaurantProvider>();
     final state = provider.state;
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final backgroundColor = isDark 
+        ? Theme.of(context).scaffoldBackgroundColor 
+        : Colors.grey[50];
+    final textColor = isDark ? Colors.white70 : Colors.grey[600];
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
 if (state.error == null) ...[
@@ -73,7 +79,7 @@ if (state.error == null) ...[
                         'Rekomendasi restoran terbaik untuk Anda',
                         style: TextStyle(
                           fontSize: 15,
-                          color: Colors.grey[600],
+                          color: textColor,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -175,7 +181,7 @@ if (state.error == null) ...[
                                           Expanded(
                                             child: Container(
                                               height: 14,
-                                              color: Colors.grey[300],
+                                              color: isDark ? Colors.grey[700] : Colors.grey[300],
                                             ),
                                           ),
                                         ],
@@ -185,7 +191,7 @@ if (state.error == null) ...[
                                         height: 24,
                                         width: 100,
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[300],
+                                          color: isDark ? Colors.grey[700] : Colors.grey[300],
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -219,13 +225,14 @@ if (state.error == null) ...[
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Gagal memuat data. Silakan periksa koneksi internet Anda.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: isDark ? Colors.white70 : Colors.grey),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(

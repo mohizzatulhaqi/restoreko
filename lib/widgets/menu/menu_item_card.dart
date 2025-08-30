@@ -44,6 +44,12 @@ class _MenuItemCardState extends State<MenuItemCard>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? Colors.grey[800]! : widget.backgroundColor;
+    final textColor = isDark ? Colors.white : Colors.grey[800];
+    final iconColor = isDark ? Colors.orange[300] : Colors.orange[700];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.white.withOpacity(0.5);
+    
     return AnimatedBuilder(
       animation: _scaleAnimation,
       builder: (context, child) {
@@ -51,32 +57,25 @@ class _MenuItemCardState extends State<MenuItemCard>
           scale: _scaleAnimation.value,
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  widget.backgroundColor.withOpacity(0.9),
-                  widget.backgroundColor,
-                  widget.backgroundColor.withOpacity(0.8),
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: widget.backgroundColor.withOpacity(0.3),
-                  blurRadius: _isPressed ? 4 : 8,
-                  offset: Offset(0, _isPressed ? 2 : 4),
-                  spreadRadius: _isPressed ? 0 : 1,
-                ),
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.8),
-                  blurRadius: 2,
-                  offset: const Offset(-1, -1),
-                ),
+                if (!isDark) ...[
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: _isPressed ? 4 : 8,
+                    offset: Offset(0, _isPressed ? 2 : 4),
+                    spreadRadius: _isPressed ? 0 : 1,
+                  ),
+                  BoxShadow(
+                    color: isDark ? Colors.grey[900]! : Colors.white.withOpacity(0.8),
+                    blurRadius: 2,
+                    offset: const Offset(-1, -1),
+                  ),
+                ],
               ],
               border: Border.all(
-                color: Colors.white.withOpacity(0.5),
+                color: isDark ? Colors.grey[700]! : borderColor,
                 width: 1,
               ),
             ),
@@ -87,23 +86,25 @@ class _MenuItemCardState extends State<MenuItemCard>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.8),
-                          Colors.white.withOpacity(0.4),
-                        ],
-                      ),
+                      color: isDark ? Colors.grey[700] : Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.6),
+                        color: isDark ? Colors.grey[600]! : Colors.white.withOpacity(0.6),
                         width: 1,
                       ),
+                      boxShadow: isDark
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(1, 1),
+                              ),
+                            ],
                     ),
                     child: Icon(
                       widget.icon,
-                      color: Colors.orange[700],
+                      color: iconColor,
                       size: 18,
                     ),
                   ),
@@ -117,7 +118,7 @@ class _MenuItemCardState extends State<MenuItemCard>
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
+                          color: textColor,
                           height: 1.1,
                         ),
                         maxLines: 2,
