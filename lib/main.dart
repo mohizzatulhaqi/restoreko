@@ -10,6 +10,8 @@ import 'services/restaurant_service.dart';
 import 'package:restoreko/providers/favorite_provider.dart';
 import 'package:restoreko/database/database_helper.dart';
 import 'package:restoreko/providers/theme_provider.dart';
+import 'package:restoreko/services/notification_service.dart';
+import 'package:restoreko/services/settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +20,20 @@ void main() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
     debugPrint('Database initialized successfully');
+    
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    
+    final settingsService = SettingsService();
+    await settingsService.initialize();
+    
+    if (settingsService.isDailyReminderEnabled) {
+      await notificationService.scheduleLunchReminder();
+    }
+    
+    debugPrint('Services initialized successfully');
   } catch (e) {
-    debugPrint('Failed to initialize database: $e');
+    debugPrint('Initialization error: $e');
   }
 
   runApp(const MyApp());

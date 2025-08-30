@@ -15,16 +15,16 @@ class FavoriteButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black54 : Colors.black26, 
-            blurRadius: 4, 
-            offset: const Offset(0, 2)
+            color: isDark ? Colors.black54 : Colors.black26,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -38,15 +38,13 @@ class FavoriteButton extends StatelessWidget {
           final message = isFavorite
               ? '${restaurantName ?? 'Restoran'} dihapus dari favorit'
               : '${restaurantName ?? 'Restoran'} ditambahkan ke favorit';
-              
+
           final duration = isFavorite ? 2 : 3;
           final controller = ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 message,
-                style: TextStyle(
-                  color: isDark ? Colors.black : null,
-                ),
+                style: TextStyle(color: isDark ? Colors.black : null),
               ),
               backgroundColor: isDark ? Colors.grey[300] : null,
               duration: Duration(seconds: duration),
@@ -63,11 +61,9 @@ class FavoriteButton extends StatelessWidget {
               ),
             ),
           );
-          
+
           controller.closed.then((SnackBarClosedReason reason) {
-            if (reason == SnackBarClosedReason.timeout) {
-              // Perform any action when snackbar is dismissed by timeout
-            }
+            if (reason == SnackBarClosedReason.timeout) {}
           });
         },
       ),
