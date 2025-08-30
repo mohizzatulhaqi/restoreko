@@ -36,7 +36,7 @@ class RestaurantState {
 
 class RestaurantProvider extends ChangeNotifier {
   final RestaurantService _service;
-  RestaurantProvider({RestaurantService? service}) : _service = service ?? RestaurantService();
+  RestaurantProvider({required RestaurantService service}) : _service = service;
 
   RestaurantState _state = const RestaurantState();
   RestaurantState get state => _state;

@@ -175,9 +175,37 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
               }
               if (state.error != null && state.restaurant == null) {
                 return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Text('Error: ${state.error}')],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Terjadi Kesalahan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tidak dapat memuat detail restoran. Silakan coba lagi nanti.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Provider.of<RestaurantDetailProvider>(context, listen: false)
+                                .load(widget.restaurantId);
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -284,13 +312,55 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  restaurant.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: Colors.grey[700],
-                  ),
+                Consumer<RestaurantDetailProvider>(
+                  builder: (context, provider, _) {
+                    final isExpanded = provider.isDescriptionExpanded;
+                    final text = restaurant.description;
+                    final textPainter = TextPainter(
+                      text: TextSpan(
+                        text: text,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      maxLines: 3,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width - 32);
+
+                    final shouldShowButton = textPainter.didExceedMaxLines;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.6,
+                            color: Colors.grey[700],
+                          ),
+                          maxLines: isExpanded ? null : 3,
+                          overflow: isExpanded ? null : TextOverflow.ellipsis,
+                        ),
+                        if (shouldShowButton)
+                          TextButton(
+                            onPressed: () {
+                              provider.toggleDescriptionExpanded();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(50, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              isExpanded ? 'Lebih Sedikit' : 'Selengkapnya',
+                              style: TextStyle(
+                                color: Colors.orange[800],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 12),

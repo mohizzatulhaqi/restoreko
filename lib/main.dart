@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'pages/restaurant_list_page.dart';
 import 'providers/restaurant_provider.dart';
+import 'providers/restaurant_detail_provider.dart';
 import 'services/restaurant_service.dart';
 
 void main() {
@@ -27,13 +28,16 @@ class MyApp extends StatelessWidget {
 
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
 
+    final restaurantService = RestaurantService();
+    
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => RestaurantProvider()..fetchRestaurants(),
+          create: (_) => RestaurantProvider(service: restaurantService)
+            ..fetchRestaurants(),
         ),
-        Provider(
-          create: (_) => RestaurantService(),
+        ChangeNotifierProvider(
+          create: (_) => RestaurantDetailProvider(service: restaurantService),
         ),
       ],
       child: MaterialApp(

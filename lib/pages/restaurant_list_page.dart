@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../widgets/restaurant_card.dart';
 import '../widgets/search_bar.dart';
 import '../providers/restaurant_provider.dart';
 import 'restaurant_detail_page.dart';
-import '../widgets/error_view.dart';
 
 class RestaurantListPage extends StatefulWidget {
   const RestaurantListPage({super.key});
@@ -51,50 +51,54 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RESTOREKO',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[800],
-                        letterSpacing: 1.2,
+if (state.error == null) ...[
+            SliverToBoxAdapter(
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'RESTOREKO',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[800],
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Rekomendasi restoran terbaik untuk Anda',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w400,
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rekomendasi restoran terbaik untuk Anda',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    SearchBarWidget(
-                      controller: _searchController,
-                      onSubmitted: (query) {
-                        if (query.isNotEmpty) {
-                          provider.searchRestaurants(query);
-                        } else {
-                          provider.fetchRestaurants();
-                        }
-                      },
-                      onChanged: _onSearchChanged,
-                      hintText: 'Cari restoran...',
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+                      const SizedBox(height: 16),
+                      SearchBarWidget(
+                        controller: _searchController,
+                        onSubmitted: (query) {
+                          if (query.isNotEmpty) {
+                            provider.searchRestaurants(query);
+                          } else {
+                            provider.fetchRestaurants();
+                          }
+                        },
+                        onChanged: _onSearchChanged,
+                        hintText: 'Cari restoran...',
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ] else ...[
+            const SliverToBoxAdapter(child: SizedBox.shrink()),
+          ],
 
           if (state.isLoading)
             SliverPadding(
@@ -203,16 +207,44 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
           else if (state.error != null)
             SliverFillRemaining(
               child: Center(
-                child: ErrorView(
-                  title: 'Gagal Memuat Data',
-                  message: state.error!,
-                  onRetry: () {
-                    if (_searchController.text.isNotEmpty) {
-                      provider.searchRestaurants(_searchController.text);
-                    } else {
-                      provider.fetchRestaurants();
-                    }
-                  },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Terjadi Kesalahan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Gagal memuat data. Silakan periksa koneksi internet Anda.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          if (_searchController.text.isNotEmpty) {
+                            provider.searchRestaurants(_searchController.text);
+                          } else {
+                            provider.fetchRestaurants();
+                          }
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Coba Lagi'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[800],
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )

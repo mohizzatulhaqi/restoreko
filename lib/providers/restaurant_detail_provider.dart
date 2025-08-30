@@ -34,14 +34,22 @@ class RestaurantDetailState {
 
 class RestaurantDetailProvider extends ChangeNotifier {
   final RestaurantService _service;
-  RestaurantDetailProvider({RestaurantService? service})
-      : _service = service ?? RestaurantService();
+  RestaurantDetailProvider({required RestaurantService service})
+      : _service = service;
 
   RestaurantDetailState _state = const RestaurantDetailState();
   RestaurantDetailState get state => _state;
 
   final ScrollController _scrollController = ScrollController();
   ScrollController get scrollController => _scrollController;
+  
+  bool _isDescriptionExpanded = false;
+  bool get isDescriptionExpanded => _isDescriptionExpanded;
+  
+  void toggleDescriptionExpanded() {
+    _isDescriptionExpanded = !_isDescriptionExpanded;
+    notifyListeners();
+  }
 
   Future<void> load(String id) async {
     _state = _state.copyWith(isLoading: true, error: null);
@@ -50,7 +58,10 @@ class RestaurantDetailProvider extends ChangeNotifier {
       final data = await _service.fetchRestaurantDetail(id);
       _state = RestaurantDetailState(restaurant: data, isLoading: false);
     } catch (e) {
-      _state = _state.copyWith(isLoading: false, error: 'Gagal memuat detail: $e');
+      _state = _state.copyWith(
+        isLoading: false, 
+        error: 'Gagal memuat data. Silakan periksa koneksi internet Anda.'
+      );
     }
     notifyListeners();
   }
@@ -68,7 +79,10 @@ class RestaurantDetailProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _state = _state.copyWith(isSubmitting: false, error: e.toString().replaceFirst('Exception: ', ''));
+      _state = _state.copyWith(
+        isSubmitting: false, 
+        error: 'Gagal mengirim ulasan. Silakan periksa koneksi internet Anda.'
+      );
       notifyListeners();
       return false;
     }
