@@ -10,6 +10,7 @@ class FavoriteProvider extends ChangeNotifier {
   void toggleFavorite(String restaurantId) {
     final current = _favorites[restaurantId] ?? false;
     _favorites[restaurantId] = !current;
+    debugPrint('Toggled favorite for $restaurantId to ${_favorites[restaurantId]}');
     notifyListeners();
   }
 

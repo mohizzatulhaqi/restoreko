@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class FavoriteButton extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onTap;
+  final String? restaurantName;
 
   const FavoriteButton({
     super.key,
     required this.isFavorite,
     required this.onTap,
+    this.restaurantName,
   });
 
   @override
@@ -28,14 +30,36 @@ class FavoriteButton extends StatelessWidget {
         onPressed: () {
           onTap();
           final message = isFavorite
-              ? 'Dihapus dari favorit'
-              : 'Ditambahkan ke favorit';
-          ScaffoldMessenger.of(context).showSnackBar(
+              ? '${restaurantName ?? 'Restoran'} dihapus dari favorit'
+              : '${restaurantName ?? 'Restoran'} ditambahkan ke favorit';
+              
+          final controller = ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
-              duration: const Duration(seconds: 1),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              action: isFavorite
+                  ? SnackBarAction(
+                      label: 'BATAL',
+                      textColor: Colors.orange,
+                      onPressed: () {
+                        // Call onTap again to toggle back
+                        onTap();
+                      },
+                    )
+                  : null,
             ),
           );
+          
+          // Handle the case where the snackbar is dismissed without pressing the action
+          controller.closed.then((SnackBarClosedReason reason) {
+            if (reason == SnackBarClosedReason.timeout && isFavorite) {
+              // The snackbar was dismissed by timeout, no action needed
+            }
+          });
         },
       ),
     );
