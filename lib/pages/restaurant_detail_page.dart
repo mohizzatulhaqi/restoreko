@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:restoreko/providers/favorite_provider.dart';
+import 'package:restoreko/widgets/favorite_button.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:provider/provider.dart';
 import '../models/restaurant.dart';
@@ -180,7 +182,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Terjadi Kesalahan',
@@ -198,8 +204,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () {
-                            Provider.of<RestaurantDetailProvider>(context, listen: false)
-                                .load(widget.restaurantId);
+                            Provider.of<RestaurantDetailProvider>(
+                              context,
+                              listen: false,
+                            ).load(widget.restaurantId);
                           },
                           icon: const Icon(Icons.refresh),
                           label: const Text('Coba Lagi'),
@@ -222,13 +230,31 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Widget _buildContent(BuildContext ctx, Restaurant restaurant) {
-    final detailProvider = Provider.of<RestaurantDetailProvider>(ctx, listen: false);
+    final detailProvider = Provider.of<RestaurantDetailProvider>(
+      ctx,
+      listen: false,
+    );
     return CustomScrollView(
       controller: detailProvider.scrollController,
       slivers: [
         SliverAppBar(
           expandedHeight: 250,
           pinned: true,
+          actions: [
+            Consumer<FavoriteProvider>(
+              builder: (context, favProvider, _) {
+                final isFav = favProvider.isFavorite(restaurant.id);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12, top: 2),
+                  child: FavoriteButton(
+                    isFavorite: isFav,
+                    onTap: () => favProvider.toggleFavorite(restaurant.id),
+                  ),
+                );
+              },
+            ),
+          ],
+
           flexibleSpace: FlexibleSpaceBar(
             title: Hero(
               tag: 'restaurant-title-${restaurant.id}',
@@ -261,6 +287,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
             ),
           ),
         ),
+
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -398,8 +425,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 ReviewForm(
                   restaurantId: restaurant.id,
                   onSuccess: () {
-                    Provider.of<RestaurantDetailProvider>(ctx, listen: false)
-                        .scrollToBottom();
+                    Provider.of<RestaurantDetailProvider>(
+                      ctx,
+                      listen: false,
+                    ).scrollToBottom();
                   },
                 ),
 
@@ -449,7 +478,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   }
 
   Widget _buildReviewCard(BuildContext ctx, CustomerReview review) {
-    final detailProvider = Provider.of<RestaurantDetailProvider>(ctx, listen: false);
+    final detailProvider = Provider.of<RestaurantDetailProvider>(
+      ctx,
+      listen: false,
+    );
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(

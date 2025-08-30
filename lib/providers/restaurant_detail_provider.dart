@@ -45,6 +45,8 @@ class RestaurantDetailProvider extends ChangeNotifier {
   
   bool _isDescriptionExpanded = false;
   bool get isDescriptionExpanded => _isDescriptionExpanded;
+
+  
   
   void toggleDescriptionExpanded() {
     _isDescriptionExpanded = !_isDescriptionExpanded;

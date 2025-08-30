@@ -7,6 +7,7 @@ import 'pages/restaurant_list_page.dart';
 import 'providers/restaurant_provider.dart';
 import 'providers/restaurant_detail_provider.dart';
 import 'services/restaurant_service.dart';
+import 'providers/favorite_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,19 +35,18 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        Provider<RestaurantService>(
-          create: (_) => restaurantService,
-        ),
+        Provider<RestaurantService>(create: (_) => restaurantService),
         ChangeNotifierProvider(
-          create: (context) => RestaurantProvider(
-            service: context.read<RestaurantService>(),
-          )..fetchRestaurants(),
+          create: (context) =>
+              RestaurantProvider(service: context.read<RestaurantService>())
+                ..fetchRestaurants(),
         ),
         ChangeNotifierProvider(
           create: (context) => RestaurantDetailProvider(
             service: context.read<RestaurantService>(),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
       ],
       child: MaterialApp(
         title: 'Restoreko',
