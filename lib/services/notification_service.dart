@@ -7,6 +7,7 @@ import 'dart:developer' as developer;
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
+
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin _notifications =
@@ -65,7 +66,12 @@ class NotificationService {
       '[NotificationService] Scheduling lunch reminder...',
       name: 'Restoreko',
     );
+
     await _notifications.cancel(_lunchReminderId);
+    developer.log(
+      '[NotificationService] Cancelled existing lunch reminder',
+      name: 'Restoreko',
+    );
 
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
     developer.log(
@@ -132,7 +138,7 @@ class NotificationService {
     await _notifications.zonedSchedule(
       _lunchReminderId,
       'Waktunya Makan Siang!',
-      'Jangan lupa untuk makan siang yang sehat dan bergizi!',
+      'Jangan lupa untuk makan siang!',
       scheduledDate,
       platformChannelSpecifics,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -156,6 +162,47 @@ class NotificationService {
 
     return pendingNotifications.any(
       (notification) => notification.id == _lunchReminderId,
+    );
+  }
+
+  Future<void> showRandomRestaurantNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    developer.log(
+      '[NotificationService] Showing restaurant notification: $title',
+      name: 'Restoreko',
+    );
+
+    const androidDetails = AndroidNotificationDetails(
+      'restaurant_recommendation_channel',
+      'Restaurant Recommendations',
+      channelDescription: 'Channel for restaurant recommendations',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      id,
+      title,
+      body,
+      details,
+      payload: 'restaurant_recommendation',
     );
   }
 }

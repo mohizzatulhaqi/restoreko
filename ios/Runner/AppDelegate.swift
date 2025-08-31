@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import workmanager
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -8,6 +9,25 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    if #available(iOS 10.0, *) {
+     UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+   }
+
+   if(!UserDefaults.standard.bool(forKey: "Notification")) {
+     UIApplication.shared.cancelAllLocalNotifications()
+     UserDefaults.standard.set(true, forKey: "Notification")
+   }
+
+   WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+       GeneratedPluginRegistrant.register(with: registry)
+   }
+
+   WorkmanagerPlugin.registerBGProcessingTask(withIdentifier: "dailyRestaurantRecommendation")
+
+    WorkmanagerPlugin.registerPeriodicTask(
+        withIdentifier: "dailyRestaurantRecommendation",
+        frequency: NSNumber(value: 24 * 60)  
+    )
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

@@ -47,6 +47,22 @@ class RestaurantService {
     }
   }
 
+  Future<Restaurant> getRandomRestaurant() async {
+    try {
+      final restaurants = await fetchRestaurants();
+      if (restaurants.isEmpty) {
+        throw Exception('Tidak ada restoran yang tersedia');
+      }
+      // Get a random restaurant
+      final random = restaurants.toList()..shuffle();
+      final randomRestaurant = random.first;
+      // Fetch full details of the restaurant
+      return await fetchRestaurantDetail(randomRestaurant.id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Restaurant> submitReview({
     required String id,
     required String name,

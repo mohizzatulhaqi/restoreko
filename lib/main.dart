@@ -12,26 +12,43 @@ import 'package:restoreko/database/database_helper.dart';
 import 'package:restoreko/providers/theme_provider.dart';
 import 'package:restoreko/services/notification_service.dart';
 import 'package:restoreko/services/settings_service.dart';
+import 'package:restoreko/services/background_service.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Initialize database
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
     debugPrint('Database initialized successfully');
     
+    // Initialize notification service
     final notificationService = NotificationService();
     await notificationService.initialize();
     
+    // Initialize settings service
     final settingsService = SettingsService();
     await settingsService.initialize();
     
+    // Initialize background service
+    await BackgroundService.initialize();
+    
+    // Initialize WorkManager
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false,
+    );
+    
+    // Schedule or cancel notifications based on settings
     if (settingsService.isDailyReminderEnabled) {
-      await notificationService.scheduleLunchReminder();
+      await BackgroundService.scheduleDailyNotification();
+    } else {
+      await BackgroundService.cancelDailyNotification();
     }
     
-    debugPrint('Services initialized successfully');
+    debugPrint('All services initialized successfully');
   } catch (e) {
     debugPrint('Initialization error: $e');
   }
