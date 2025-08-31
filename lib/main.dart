@@ -15,39 +15,57 @@ import 'package:restoreko/providers/settings_provider.dart';
 import 'package:restoreko/services/background_service.dart';
 import 'package:workmanager/workmanager.dart';
 
+/// Dispatcher untuk task background
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    switch (task) {
+      case "dailyRestaurantRecommendation":
+        await BackgroundService.scheduleDailyNotification();
+        break;
+      default:
+        debugPrint("Unknown task: $task");
+    }
+    return Future.value(true);
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  const enableWorkmanager = bool.fromEnvironment(
+    'ENABLE_WORKMANAGER',
+    defaultValue: true,
+  );
 
   try {
     // Initialize database
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
     debugPrint('Database initialized successfully');
-    
+
     // Initialize notification service
     final notificationService = NotificationService();
     await notificationService.initialize();
-    
+
     // Initialize settings provider
     final settingsProvider = SettingsProvider();
     await settingsProvider.loadSettings();
-    
+
     // Initialize background service
     await BackgroundService.initialize();
-    
-    // Initialize WorkManager
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
-    
-    // Schedule or cancel notifications based on settings
-    if (settingsProvider.isDailyReminderEnabled) {
-      await BackgroundService.scheduleDailyNotification();
-    } else {
-      await BackgroundService.cancelDailyNotification();
+
+    // Initialize WorkManager (jika tidak di-disable via dart-define)
+    if (enableWorkmanager) {
+      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+
+      // Schedule or cancel notifications based on settings
+      if (settingsProvider.isDailyReminderEnabled) {
+        await BackgroundService.scheduleDailyNotification();
+      } else {
+        await BackgroundService.cancelDailyNotification();
+      }
     }
-    
+
     debugPrint('All services initialized successfully');
   } catch (e) {
     debugPrint('Initialization error: $e');
@@ -74,7 +92,6 @@ class MyApp extends StatelessWidget {
     );
 
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
-
     final restaurantService = RestaurantService();
 
     return MultiProvider(
@@ -91,12 +108,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
-        ChangeNotifierProvider(
-          create: (_) => ThemeProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SettingsProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
