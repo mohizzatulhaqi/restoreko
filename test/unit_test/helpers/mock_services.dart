@@ -4,12 +4,10 @@ import 'package:restoreko/models/api_result.dart';
 import 'package:restoreko/models/restaurant.dart';
 import 'package:restoreko/services/restaurant_service.dart';
 
-// Create a mock class using Mockito
 class MockRestaurantService extends Mock implements RestaurantService {
   final List<Restaurant> mockRestaurants = [];
   
   MockRestaurantService() {
-    // Add a default mock restaurant
     mockRestaurants.add(createMockRestaurant());
   }
   
@@ -60,7 +58,6 @@ class MockRestaurantService extends Mock implements RestaurantService {
   }
 }
 
-// Helper function to create a mock restaurant
 Restaurant createMockRestaurant() {
   return Restaurant(
     id: '1',

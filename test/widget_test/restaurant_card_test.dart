@@ -42,7 +42,6 @@ void main() {
       ),
     );
 
-    // Verify image is displayed with correct URL
     final image = tester.widget<Image>(find.byType(Image));
     expect(
       (image.image as NetworkImage).url,
@@ -69,11 +68,9 @@ void main() {
       ),
     );
 
-    // Find and tap the specific GestureDetector we want
     await tester.tap(find.byKey(const Key('test_gesture_detector')));
     await tester.pump();
 
-    // Verify tap was registered
     expect(wasTapped, isTrue);
   });
 }

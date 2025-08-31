@@ -23,7 +23,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
   @override
   void initState() {
     super.initState();
-    // panggil load hanya sekali saat halaman dibuka
     Future.microtask(() {
       context.read<RestaurantDetailProvider>().load(widget.restaurantId);
     });
@@ -83,7 +82,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Add more skeleton elements for menu sections and reviews
                   ...List.generate(
                     5,
                     (i) => Padding(
@@ -356,11 +354,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Review Form
                   ReviewForm(
                     restaurantId: restaurant.id,
                     onSuccess: () {
-                      // Scroll to reviews section after successful submission
                       Future.delayed(const Duration(milliseconds: 500), () {
                         provider.scrollToBottom();
                       });
@@ -368,7 +364,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Reviews Section
                   Row(
                     children: [
                       Text(
@@ -404,7 +399,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   const Divider(color: Colors.grey, thickness: 1),
                   const SizedBox(height: 8),
 
-                  // Reviews List
                   if (restaurant.customerReviews.isEmpty)
                     Container(
                       width: double.infinity,
@@ -445,7 +439,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                           .toList(),
                     ),
 
-                  // Add some bottom padding
                   const SizedBox(height: 24),
                 ],
               ),

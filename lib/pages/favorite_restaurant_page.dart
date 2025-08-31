@@ -118,7 +118,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 );
               }
 
-              // Show empty state if no favorites
               if (provider.favorites.isEmpty) {
                 return SliverFillRemaining(
                   child: Center(
@@ -154,7 +153,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 );
               }
 
-              // Show list of favorite restaurants
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final restaurant = provider.favorites[index];
@@ -319,7 +317,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 );
                 await favoriteProvider.toggleFavorite(restaurant);
                 if (mounted) {
-                  await _loadFavorites(); // Refresh the list after removing
+                  await _loadFavorites(); 
                 }
                 
                 final isDark = Theme.of(context).brightness == Brightness.dark;

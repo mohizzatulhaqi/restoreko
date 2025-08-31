@@ -39,7 +39,6 @@ class _ReviewFormState extends State<ReviewForm> {
 
     final provider = context.read<RestaurantDetailProvider>();
 
-    // Clear any previous submit errors
     provider.clearSubmitError();
 
     final success = await provider.submitReview(
@@ -49,10 +48,8 @@ class _ReviewFormState extends State<ReviewForm> {
     );
 
     if (success) {
-      // Clear form and collapse on success
       _clearForm();
 
-      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -69,7 +66,6 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
         );
 
-        // Call onSuccess callback
         widget.onSuccess?.call();
       }
     }
@@ -120,7 +116,6 @@ class _ReviewFormState extends State<ReviewForm> {
                   ],
                 ),
 
-                // Show submit error if any
                 if (state.submitError != null) ...[
                   const SizedBox(height: 8),
                   Container(

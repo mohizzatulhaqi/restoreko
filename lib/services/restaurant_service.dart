@@ -50,10 +50,8 @@ class RestaurantService {
       if (restaurants.isEmpty) {
         throw Exception('Tidak ada restoran yang tersedia');
       }
-      // Get a random restaurant
       final random = restaurants.toList()..shuffle();
       final randomRestaurant = random.first;
-      // Fetch full details of the restaurant
       return await fetchRestaurantDetail(randomRestaurant.id);
     } catch (e) {
       rethrow;
@@ -72,7 +70,7 @@ class RestaurantService {
             headers: {'Content-Type': 'application/json'},
             body: json.encode({'id': id, 'name': name, 'review': review}),
           )
-          .timeout(const Duration(seconds: 15)); // Increased timeout
+          .timeout(const Duration(seconds: 15));
 
       print('Review submission response: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -80,10 +78,8 @@ class RestaurantService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['error'] == false) {
-          // Add a small delay to ensure server has processed the review
           await Future.delayed(const Duration(milliseconds: 500));
 
-          // Fetch the complete restaurant data to ensure we have the latest reviews
           return await fetchRestaurantDetail(id);
         } else {
           throw Exception(

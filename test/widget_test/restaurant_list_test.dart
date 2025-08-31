@@ -65,13 +65,10 @@ void main() {
   });
 
   testWidgets('RestaurantListPage shows restaurant list', (tester) async {
-    // Create provider with mock service
     final provider = RestaurantProvider(service: mockService);
     
-    // Trigger data fetch
     await provider.fetchRestaurants();
     
-    // Build our app and trigger a frame
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<RestaurantProvider>.value(
@@ -81,16 +78,12 @@ void main() {
       ),
     );
 
-    // Initial build
     await tester.pump();
     
-    // Verify loading state is shown (Skeletonizer is used in the UI)
     expect(find.byType(SliverList), findsOneWidget);
     
-    // Let the animations complete
     await tester.pumpAndSettle();
     
-    // Verify mock data is displayed
     expect(find.text('Test Restaurant'), findsWidgets);
     expect(find.text('Test City'), findsWidgets);
     expect(find.byType(Card), findsWidgets);

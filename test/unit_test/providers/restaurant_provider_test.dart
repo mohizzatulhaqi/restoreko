@@ -26,7 +26,6 @@ void main() {
   ];
 
   setUpAll(() {
-    // Register fallback values for mocks
     registerFallbackValue(tRestaurants);
   });
 
@@ -36,7 +35,6 @@ void main() {
   });
 
   test('initial state should be correct', () {
-    // Assert
     expect(provider.state.isLoading, false);
     expect(provider.state.restaurants, isEmpty);
     expect(provider.state.error, isNull);
@@ -44,39 +42,36 @@ void main() {
     expect(provider.state.searchResultCount, 0);
   });
 
-  test('should update state with restaurants when fetch is successful', () async {
-    // Arrange
-    when(() => mockService.fetchRestaurants())
-        .thenAnswer((_) async => tRestaurants);
+  test(
+    'should update state with restaurants when fetch is successful',
+    () async {
+      when(
+        () => mockService.fetchRestaurants(),
+      ).thenAnswer((_) async => tRestaurants);
 
-    // Act
-    await provider.fetchRestaurants();
+      await provider.fetchRestaurants();
 
-    // Assert
-    expect(provider.state.isLoading, false);
-    expect(provider.state.restaurants, tRestaurants);
-    expect(provider.state.error, isNull);
+      expect(provider.state.isLoading, false);
+      expect(provider.state.restaurants, tRestaurants);
+      expect(provider.state.error, isNull);
 
-    // Verify the service was called
-    verify(() => mockService.fetchRestaurants()).called(1);
-  });
+      verify(() => mockService.fetchRestaurants()).called(1);
+    },
+  );
 
   test('should update state with error when fetch fails', () async {
-    // Arrange
     final errorMessage = 'Failed to fetch restaurants';
-    when(() => mockService.fetchRestaurants())
-        .thenThrow(Exception(errorMessage));
+    when(
+      () => mockService.fetchRestaurants(),
+    ).thenThrow(Exception(errorMessage));
 
-    // Act
     await provider.fetchRestaurants();
 
-    // Assert
     expect(provider.state.isLoading, false);
     expect(provider.state.restaurants, isEmpty);
     expect(provider.state.error, isNotNull);
     expect(provider.state.error, contains(errorMessage));
 
-    // Verify the service was called
     verify(() => mockService.fetchRestaurants()).called(1);
   });
 }

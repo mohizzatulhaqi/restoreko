@@ -135,7 +135,6 @@ class Restaurant {
     );
   }
 
-  // Convert Restaurant to a Map for database storage
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -144,8 +143,6 @@ class Restaurant {
       'pictureId': pictureId,
       'city': city,
       'rating': rating,
-      // Note: We're not storing menus, categories, and reviews in the favorites table
-      // to keep it simple. These will be fetched from the API when viewing details.
     };
   }
 }

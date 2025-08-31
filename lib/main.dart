@@ -16,7 +16,6 @@ import 'package:restoreko/services/notification_service.dart';
 import 'package:restoreko/providers/settings_provider.dart';
 import 'package:restoreko/services/background_service.dart';
 
-/// Dispatcher untuk task background
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     switch (task) {
@@ -63,7 +62,6 @@ Future<void> _initializeApp() async {
       try {
         await BackgroundService.initialize();
 
-        // Schedule or cancel notifications based on settings
         if (settingsProvider.isDailyReminderEnabled) {
           debugPrint('Scheduling daily notifications...');
           await BackgroundService.scheduleDailyNotification();
@@ -75,7 +73,6 @@ Future<void> _initializeApp() async {
       } catch (e, stackTrace) {
         debugPrint('⚠️ Error initializing background services: $e');
         debugPrint('Stack trace: $stackTrace');
-        // Continue with app initialization even if background services fail
       }
     } else {
       debugPrint('Background services are disabled');
@@ -85,21 +82,16 @@ Future<void> _initializeApp() async {
   } catch (e, stackTrace) {
     debugPrint('❌ Critical initialization error: $e');
     debugPrint('Stack trace: $stackTrace');
-    // Continue with app initialization even if there are errors
   }
 }
 
 void main() {
-  // Run the app in a zone
   runZonedGuarded(
     () async {
-      // Initialize binding inside the zone
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Initialize services in background (non-blocking)
       _initializeApp();
 
-      // Run the app immediately
       runApp(const MyApp());
     },
     (error, stackTrace) {
@@ -131,16 +123,13 @@ class MyApp extends StatelessWidget {
     
     return MultiProvider(
       providers: [
-        // Create RestaurantService as a regular provider
         Provider<RestaurantService>(
           create: (_) => restaurantService,
         ),
-        // Use ChangeNotifierProvider for RestaurantProvider
         ChangeNotifierProvider(
           create: (context) => RestaurantProvider(service: restaurantService)
             ..fetchRestaurants(),
         ),
-        // Use ChangeNotifierProvider for RestaurantDetailProvider
         ChangeNotifierProvider(
           create: (context) => RestaurantDetailProvider(service: restaurantService),
         ),

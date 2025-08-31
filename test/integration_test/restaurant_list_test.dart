@@ -28,25 +28,23 @@ Restaurant createMockRestaurant() {
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  
+
   late MockRestaurantService mockService;
   late RestaurantProvider provider;
   final mockRestaurant = createMockRestaurant();
-  
+
   setUp(() {
     mockService = MockRestaurantService();
     provider = RestaurantProvider(service: mockService);
   });
 
-  testWidgets('App shows loading state when fetching restaurants', (tester) async {
-    // Arrange - Set up a delayed response to test loading state
-    when(() => mockService.fetchRestaurants())
-        .thenAnswer((_) => Future.delayed(
-              const Duration(seconds: 1),
-              () => [mockRestaurant],
-            ));
-    
-    // Act - Build the widget
+  testWidgets('App shows loading state when fetching restaurants', (
+    tester,
+  ) async {
+    when(() => mockService.fetchRestaurants()).thenAnswer(
+      (_) => Future.delayed(const Duration(seconds: 1), () => [mockRestaurant]),
+    );
+
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<RestaurantProvider>.value(
@@ -55,12 +53,10 @@ void main() {
         ),
       ),
     );
-    
-    // Trigger the data fetch
+
     provider.fetchRestaurants();
     await tester.pump();
-    
-    // Verify loading state by checking for common loading indicators
+
     final loadingIndicators = find.byWidgetPredicate(
       (widget) =>
           widget is CircularProgressIndicator ||
@@ -68,17 +64,21 @@ void main() {
           (widget is Text &&
               (widget.data?.toLowerCase().contains('loading') ?? false)),
     );
-    
-    expect(loadingIndicators, findsAtLeast(1),
-        reason: 'Expected to find at least one loading indicator');
+
+    expect(
+      loadingIndicators,
+      findsAtLeast(1),
+      reason: 'Expected to find at least one loading indicator',
+    );
   });
 
-  testWidgets('App shows restaurant list after successful load', (tester) async {
-    // Arrange
-    when(() => mockService.fetchRestaurants())
-        .thenAnswer((_) async => [mockRestaurant]);
-    
-    // Act - Build the widget and trigger data load
+  testWidgets('App shows restaurant list after successful load', (
+    tester,
+  ) async {
+    when(
+      () => mockService.fetchRestaurants(),
+    ).thenAnswer((_) async => [mockRestaurant]);
+
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<RestaurantProvider>.value(
@@ -87,24 +87,21 @@ void main() {
         ),
       ),
     );
-    
-    // Trigger the data fetch and wait for it to complete
+
     await provider.fetchRestaurants();
     await tester.pumpAndSettle();
-    
-    // Assert - Verify restaurant data is displayed
+
     expect(find.text('Test Restaurant'), findsOneWidget);
     expect(find.text('Test City'), findsOneWidget);
     expect(find.text('4.5'), findsOneWidget);
   });
 
   testWidgets('App shows error message when fetch fails', (tester) async {
-    // Arrange
     final errorMessage = 'Test error message';
-    when(() => mockService.fetchRestaurants())
-        .thenThrow(Exception(errorMessage));
-    
-    // Act - Build the widget and trigger data load
+    when(
+      () => mockService.fetchRestaurants(),
+    ).thenThrow(Exception(errorMessage));
+
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<RestaurantProvider>.value(
@@ -113,21 +110,17 @@ void main() {
         ),
       ),
     );
-    
-    // Trigger the data fetch and wait for it to complete
+
     await provider.fetchRestaurants();
     await tester.pumpAndSettle();
-    
-    // Assert - Check for error icon and error message
+
     expect(find.byIcon(Icons.error_outline), findsOneWidget);
     expect(
       find.text('Terjadi Kesalahan'),
       findsOneWidget,
       reason: 'Expected to find error message "Terjadi Kesalahan"',
     );
-    
-    // The actual UI doesn't show the detailed error message to users
-    // So we'll just verify the error state is handled gracefully
+
     expect(
       find.byType(SliverFillRemaining),
       findsOneWidget,

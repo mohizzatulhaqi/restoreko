@@ -18,14 +18,13 @@ void callbackDispatcher() {
         name: 'Restoreko',
       );
 
-      // Initialize services
       final notificationService = NotificationService();
       await notificationService.initialize();
-      
-      // In background tasks, we can't use Provider directly, so we'll use shared preferences
+
       final prefs = await SharedPreferences.getInstance();
-      final isRecommendationEnabled = prefs.getBool('restaurant_recommendation_enabled') ?? false;
-      
+      final isRecommendationEnabled =
+          prefs.getBool('restaurant_recommendation_enabled') ?? false;
+
       if (!isRecommendationEnabled) {
         developer.log(
           '[BackgroundService] Restaurant recommendations are disabled, skipping...',
@@ -46,9 +45,8 @@ void callbackDispatcher() {
         name: 'Restoreko',
       );
 
-      // Show the notification using showRandomRestaurantNotification
       await notificationService.showRandomRestaurantNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000, 
         title: 'Rekomendasi Restoran',
         body: 'Coba restoran ${restaurant.name} di ${restaurant.city}',
       );
@@ -75,21 +73,15 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      // Cancel any existing tasks first
       await Workmanager().cancelAll();
-      
-      // Initialize with a unique callback
-      await Workmanager().initialize(
-        callbackDispatcher,
-        isInDebugMode: false,
-      );
+
+      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
 
       developer.log(
         '[BackgroundService] Workmanager initialized successfully',
         name: 'Restoreko',
       );
-      
-      // Log successful initialization
+
       developer.log(
         '[BackgroundService] Workmanager initialization completed',
         name: 'Restoreko',
@@ -112,12 +104,10 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      // Cancel any existing tasks first
       await Workmanager().cancelAll();
-      
-      // Add a small delay to ensure cancellation is complete
+
       await Future.delayed(const Duration(seconds: 1));
-      
+
       developer.log(
         '[BackgroundService] Cancelled any existing tasks',
         name: 'Restoreko',
@@ -129,7 +119,6 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      // Use a try-catch block for the registration
       try {
         await Workmanager().registerPeriodicTask(
           dailyTask,
@@ -158,7 +147,6 @@ class BackgroundService {
           name: 'Restoreko',
           error: e,
         );
-        // Try one more time with a simpler configuration
         await Workmanager().registerPeriodicTask(
           '${dailyTask}_retry',
           dailyTask,
@@ -173,8 +161,7 @@ class BackgroundService {
         '[BackgroundService] Next notification scheduled for: $nextRun',
         name: 'Restoreko',
       );
-      
-      // Verify the task was scheduled
+
       developer.log(
         '[BackgroundService] Daily notification scheduling completed',
         name: 'Restoreko',
@@ -186,7 +173,6 @@ class BackgroundService {
         error: e,
         stackTrace: stackTrace,
       );
-      // Don't rethrow to prevent app from crashing
     }
   }
 

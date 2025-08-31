@@ -9,7 +9,7 @@ class RestaurantDetailState {
   final bool isSubmitting;
   final Restaurant? restaurant;
   final String? error;
-  final String? submitError; // Separate error for review submission
+  final String? submitError; 
 
   const RestaurantDetailState({
     this.isLoading = false,
@@ -91,7 +91,6 @@ class RestaurantDetailProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('Error refreshing restaurant detail: $e');
-      // Don't update error state on refresh failure, just log it
     }
   }
 
@@ -100,12 +99,10 @@ class RestaurantDetailProvider extends ChangeNotifier {
     required String name,
     required String review,
   }) async {
-    // Clear any previous submit errors
     _state = _state.copyWith(isSubmitting: true, submitError: null);
     notifyListeners();
 
     try {
-      // Get current restaurant data
       final currentRestaurant = _state.restaurant;
       if (currentRestaurant == null) {
         _state = _state.copyWith(
@@ -119,7 +116,6 @@ class RestaurantDetailProvider extends ChangeNotifier {
       print('Submitting review for restaurant: $id');
       print('Review data - Name: $name, Review: $review');
 
-      // Submit the review and get the complete updated restaurant data
       final updatedRestaurant = await _service.submitReview(
         id: id,
         name: name,
@@ -131,7 +127,6 @@ class RestaurantDetailProvider extends ChangeNotifier {
         'Updated restaurant reviews count: ${updatedRestaurant.customerReviews.length}',
       );
 
-      // Update the state with the complete restaurant data
       _state = _state.copyWith(
         restaurant: updatedRestaurant,
         isSubmitting: false,
@@ -140,7 +135,6 @@ class RestaurantDetailProvider extends ChangeNotifier {
       );
       notifyListeners();
 
-      // Scroll to the bottom to show the new review after a short delay
       Future.delayed(const Duration(milliseconds: 100), () {
         scrollToBottom();
       });
