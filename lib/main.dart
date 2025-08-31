@@ -11,7 +11,7 @@ import 'package:restoreko/providers/favorite_provider.dart';
 import 'package:restoreko/database/database_helper.dart';
 import 'package:restoreko/providers/theme_provider.dart';
 import 'package:restoreko/services/notification_service.dart';
-import 'package:restoreko/services/settings_service.dart';
+import 'package:restoreko/providers/settings_provider.dart';
 import 'package:restoreko/services/background_service.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -28,9 +28,9 @@ void main() async {
     final notificationService = NotificationService();
     await notificationService.initialize();
     
-    // Initialize settings service
-    final settingsService = SettingsService();
-    await settingsService.initialize();
+    // Initialize settings provider
+    final settingsProvider = SettingsProvider();
+    await settingsProvider.loadSettings();
     
     // Initialize background service
     await BackgroundService.initialize();
@@ -42,7 +42,7 @@ void main() async {
     );
     
     // Schedule or cancel notifications based on settings
-    if (settingsService.isDailyReminderEnabled) {
+    if (settingsProvider.isDailyReminderEnabled) {
       await BackgroundService.scheduleDailyNotification();
     } else {
       await BackgroundService.cancelDailyNotification();
@@ -93,7 +93,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(),
-        ), 
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SettingsProvider(),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

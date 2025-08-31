@@ -2,6 +2,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'restaurant_service.dart';
 import 'notification_service.dart';
@@ -17,8 +18,21 @@ void callbackDispatcher() {
         name: 'Restoreko',
       );
 
+      // Initialize services
       final notificationService = NotificationService();
       await notificationService.initialize();
+      
+      // In background tasks, we can't use Provider directly, so we'll use shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final isRecommendationEnabled = prefs.getBool('restaurant_recommendation_enabled') ?? false;
+      
+      if (!isRecommendationEnabled) {
+        developer.log(
+          '[BackgroundService] Restaurant recommendations are disabled, skipping...',
+          name: 'Restoreko',
+        );
+        return true;
+      }
 
       developer.log(
         '[BackgroundService] Getting random restaurant...',
@@ -31,11 +45,12 @@ void callbackDispatcher() {
         '[BackgroundService] Showing notification for restaurant: ${restaurant.name}',
         name: 'Restoreko',
       );
+
+      // Show the notification using showRandomRestaurantNotification
       await notificationService.showRandomRestaurantNotification(
-        id: DateTime.now().millisecondsSinceEpoch % 100000,
-        title: 'Rekomendasi Restoran Hari Ini',
-        body:
-            '${restaurant.name} - ${restaurant.city}\n${restaurant.description.substring(0, 100)}...',
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID
+        title: 'Rekomendasi Restoran',
+        body: 'Coba restoran ${restaurant.name} di ${restaurant.city}',
       );
 
       developer.log(

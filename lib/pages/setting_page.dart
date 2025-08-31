@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:restoreko/providers/theme_provider.dart';
 import 'package:restoreko/services/background_service.dart';
 import 'package:restoreko/services/notification_service.dart';
-import 'package:restoreko/services/settings_service.dart';
+import 'package:restoreko/providers/settings_provider.dart';
 import 'dart:developer' as developer;
 
 class SettingsPage extends StatefulWidget {
@@ -19,12 +19,20 @@ class _SettingsPageState extends State<SettingsPage>
   bool _isLoading = false;
   bool _isDailyReminderEnabled = false;
   bool _isRestaurantRecommendationEnabled = false;
+  
+  late final SettingsProvider _settingsProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _loadSettings();
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadSettings();
   }
 
   @override
@@ -41,15 +49,13 @@ class _SettingsPageState extends State<SettingsPage>
 
     setState(() => _isLoading = true);
     try {
-      final settingsService = SettingsService();
-      await settingsService.initialize();
+      await _settingsProvider.loadSettings();
 
       if (!mounted) return;
 
       setState(() {
-        _isDailyReminderEnabled = settingsService.isDailyReminderEnabled;
-        _isRestaurantRecommendationEnabled =
-            settingsService.isRestaurantRecommendationEnabled;
+        _isDailyReminderEnabled = _settingsProvider.isDailyReminderEnabled;
+        _isRestaurantRecommendationEnabled = _settingsProvider.isRestaurantRecommendationEnabled;
       });
     } catch (e) {
       if (mounted) _showErrorSnackBar('Gagal memuat pengaturan: $e');
@@ -304,10 +310,9 @@ class _SettingsPageState extends State<SettingsPage>
     developer.log('[SettingsPage] Toggling lunch reminder to: $value', name: 'Restoreko');
     try {
       final notificationService = NotificationService();
-      final settingsService = SettingsService();
-      await settingsService.initialize();
+      final success = await _settingsProvider.toggleDailyReminder(value);
 
-      if (value) {
+      if (success) {
         developer.log('[SettingsPage] Scheduling lunch reminder...', name: 'Restoreko');
         await notificationService.scheduleLunchReminder();
         developer.log('[SettingsPage] Lunch reminder scheduled', name: 'Restoreko');
@@ -316,9 +321,6 @@ class _SettingsPageState extends State<SettingsPage>
         await notificationService.cancelLunchReminder();
         developer.log('[SettingsPage] Lunch reminder cancelled', name: 'Restoreko');
       }
-
-      await settingsService.setDailyReminder(value);
-      developer.log('[SettingsPage] Daily reminder setting saved: $value', name: 'Restoreko');
 
       _showSuccessSnackBar(
         value
@@ -338,9 +340,7 @@ class _SettingsPageState extends State<SettingsPage>
     setState(() => _isLoading = true);
 
     try {
-      final settingsService = SettingsService();
-      await settingsService.initialize();
-      await settingsService.setRestaurantRecommendation(value);
+      await _settingsProvider.toggleRestaurantRecommendation(value);
       developer.log('[SettingsPage] Restaurant recommendation setting saved: $value', name: 'Restoreko');
 
       if (value) {
