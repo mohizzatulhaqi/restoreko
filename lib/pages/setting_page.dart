@@ -23,16 +23,11 @@ class _SettingsPageState extends State<SettingsPage>
   late final SettingsProvider _settingsProvider;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _loadSettings();
-  }
-
-  @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     WidgetsBinding.instance.addObserver(this);
+    _loadSettings();
   }
 
   @override

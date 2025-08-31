@@ -93,6 +93,8 @@ class Restaurant {
 
   Restaurant copyWith({
     bool? isFavorite,
+    List<CustomerReview>? customerReviews,
+    List<Category>? categories,
   }) {
     return Restaurant(
       id: id,
@@ -103,8 +105,8 @@ class Restaurant {
       address: address,
       rating: rating,
       menu: menu,
-      categories: categories,
-      customerReviews: customerReviews,
+      categories: categories ?? this.categories,
+      customerReviews: customerReviews ?? this.customerReviews,
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }

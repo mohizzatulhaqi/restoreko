@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/restaurant_detail_provider.dart';
 
@@ -9,13 +10,14 @@ class ReviewForm extends StatefulWidget {
   const ReviewForm({super.key, required this.restaurantId, this.onSuccess});
 
   @override
-  _ReviewFormState createState() => _ReviewFormState();
+  State<ReviewForm> createState() => _ReviewFormState();
 }
 
 class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _reviewController = TextEditingController();
+  bool _isExpanded = false;
 
   @override
   void dispose() {
@@ -24,186 +26,275 @@ class _ReviewFormState extends State<ReviewForm> {
     super.dispose();
   }
 
+  void _clearForm() {
+    _nameController.clear();
+    _reviewController.clear();
+    setState(() {
+      _isExpanded = false;
+    });
+  }
+
   Future<void> _submitReview() async {
     if (!_formKey.currentState!.validate()) return;
-    try {
-      final ok = await context.read<RestaurantDetailProvider>().submitReview(
-        id: widget.restaurantId,
-        name: _nameController.text.trim(),
-        review: _reviewController.text.trim(),
-      );
 
-      if (mounted && ok) {
-        _nameController.clear();
-        _reviewController.clear();
-        FocusScope.of(context).unfocus();
+    final provider = context.read<RestaurantDetailProvider>();
 
+    // Clear any previous submit errors
+    provider.clearSubmitError();
+
+    final success = await provider.submitReview(
+      id: widget.restaurantId,
+      name: _nameController.text.trim(),
+      review: _reviewController.text.trim(),
+    );
+
+    if (success) {
+      // Clear form and collapse on success
+      _clearForm();
+
+      // Show success message
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Ulasan berhasil dikirim!"),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('Ulasan berhasil dikirim!')),
+              ],
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
         );
 
-        await context.read<RestaurantDetailProvider>().load(
-          widget.restaurantId,
-        );
-
-        if (widget.onSuccess != null) {
-          widget.onSuccess!();
-        }
+        // Call onSuccess callback
+        widget.onSuccess?.call();
       }
-    } catch (e) {
-      final errorMessage = e.toString().replaceAll('Exception: ', '');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gagal mengirim ulasan: $errorMessage"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSubmitting = context
-        .watch<RestaurantDetailProvider>()
-        .state
-        .isSubmitting;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.rate_review, color: Colors.orange[700]),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Beri Ulasan',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+    return Consumer<RestaurantDetailProvider>(
+      builder: (context, provider, _) {
+        final state = provider.state;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.rate_review,
                       color: Colors.orange[800],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Berikan Ulasan',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[800],
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: state.isSubmitting
+                          ? null
+                          : () {
+                              setState(() {
+                                _isExpanded = !_isExpanded;
+                              });
+                            },
+                      icon: Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.orange[800],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Show submit error if any
+                if (state.submitError != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red[600],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            state.submitError!,
+                            style: TextStyle(
+                              color: Colors.red[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: provider.clearSubmitError,
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.red[600],
+                            size: 18,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 20),
 
-              TextFormField(
-                controller: _nameController,
-                style: const TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  labelText: 'Nama Anda',
-                  filled: true,
-                  fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(
-                    Icons.person_outline,
-                    color: Colors.black54,
-                  ),
-                  labelStyle: const TextStyle(color: Colors.black54),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.orange.shade400,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Nama tidak boleh kosong'
-                    : null,
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _reviewController,
-                style: const TextStyle(color: Colors.black),
-                maxLines: 4,
-                maxLength: 200,
-                decoration: InputDecoration(
-                  labelText: 'Ulasan Anda',
-                  alignLabelWithHint: true,
-                  filled: true,
-                  fillColor: Colors.orange[50],
-                  prefixIcon: const Icon(
-                    Icons.message_outlined,
-                    color: Colors.black54,
-                  ),
-                  labelStyle: const TextStyle(color: Colors.black54),
-                  helperStyle: const TextStyle(color: Colors.black54),
-                  helperText: 'Input Maksimal 200 karakter',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.orange.shade400,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                validator: (value) {
-                  final text = value?.trim() ?? '';
-                  if (text.isEmpty) return 'Ulasan tidak boleh kosong';
-                  if (text.length > 200) return 'Maksimal 200 karakter';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: isSubmitting ? null : _submitReview,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[600],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                  ),
-                  icon: isSubmitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                AnimatedCrossFade(
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _nameController,
+                            enabled: !state.isSubmitting,
+                            decoration: InputDecoration(
+                              labelText: 'Nama Anda',
+                              hintText: 'Masukkan nama Anda',
+                              prefixIcon: Icon(
+                                Icons.person,
+                                color: Colors.orange[600],
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.orange[600]!,
+                                  width: 2,
+                                ),
+                              ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Nama tidak boleh kosong';
+                              }
+                              if (value.trim().length < 2) {
+                                return 'Nama minimal 2 karakter';
+                              }
+                              return null;
+                            },
                           ),
-                        )
-                      : const Icon(Icons.send_rounded, size: 18),
-                  label: Text(
-                    isSubmitting ? 'Mengirim...' : 'Kirim Ulasan',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _reviewController,
+                            enabled: !state.isSubmitting,
+                            maxLines: 4,
+                            decoration: InputDecoration(
+                              labelText: 'Ulasan Anda',
+                              hintText:
+                                  'Bagikan pengalaman Anda di restoran ini...',
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.only(bottom: 60),
+                                child: Icon(
+                                  Icons.comment,
+                                  color: Colors.orange[600],
+                                ),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.orange[600]!,
+                                  width: 2,
+                                ),
+                              ),
+                              alignLabelWithHint: true,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Ulasan tidak boleh kosong';
+                              }
+                              if (value.trim().length < 10) {
+                                return 'Ulasan minimal 10 karakter';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: state.isSubmitting
+                                    ? null
+                                    : () {
+                                        _clearForm();
+                                      },
+                                child: const Text('Batal'),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: state.isSubmitting
+                                    ? null
+                                    : _submitReview,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange[600],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                child: state.isSubmitting
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : const Text('Kirim Ulasan'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  crossFadeState: _isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 300),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

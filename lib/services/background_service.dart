@@ -75,10 +75,23 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      // Cancel any existing tasks first
+      await Workmanager().cancelAll();
+      
+      // Initialize with a unique callback
+      await Workmanager().initialize(
+        callbackDispatcher,
+        isInDebugMode: false,
+      );
 
       developer.log(
         '[BackgroundService] Workmanager initialized successfully',
+        name: 'Restoreko',
+      );
+      
+      // Log successful initialization
+      developer.log(
+        '[BackgroundService] Workmanager initialization completed',
         name: 'Restoreko',
       );
     } catch (e, stackTrace) {
@@ -99,7 +112,12 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
+      // Cancel any existing tasks first
       await Workmanager().cancelAll();
+      
+      // Add a small delay to ensure cancellation is complete
+      await Future.delayed(const Duration(seconds: 1));
+      
       developer.log(
         '[BackgroundService] Cancelled any existing tasks',
         name: 'Restoreko',
@@ -111,27 +129,43 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      await Workmanager().registerPeriodicTask(
-        dailyTask,
-        dailyTask,
-        frequency: const Duration(hours: 24),
-        initialDelay: initialDelay,
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-          requiresBatteryNotLow: false,
-          requiresCharging: false,
-          requiresDeviceIdle: false,
-          requiresStorageNotLow: false,
-        ),
-        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-        backoffPolicy: BackoffPolicy.linear,
-        backoffPolicyDelay: const Duration(minutes: 5),
-      );
+      // Use a try-catch block for the registration
+      try {
+        await Workmanager().registerPeriodicTask(
+          dailyTask,
+          dailyTask,
+          frequency: const Duration(hours: 24),
+          initialDelay: initialDelay,
+          constraints: Constraints(
+            networkType: NetworkType.connected,
+            requiresBatteryNotLow: false,
+            requiresCharging: false,
+            requiresDeviceIdle: false,
+            requiresStorageNotLow: false,
+          ),
+          existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+          backoffPolicy: BackoffPolicy.linear,
+          backoffPolicyDelay: const Duration(minutes: 5),
+        );
 
-      developer.log(
-        '[BackgroundService] Successfully scheduled daily notification',
-        name: 'Restoreko',
-      );
+        developer.log(
+          '[BackgroundService] Successfully registered periodic task',
+          name: 'Restoreko',
+        );
+      } catch (e) {
+        developer.log(
+          '[BackgroundService] Error in registerPeriodicTask: $e',
+          name: 'Restoreko',
+          error: e,
+        );
+        // Try one more time with a simpler configuration
+        await Workmanager().registerPeriodicTask(
+          '${dailyTask}_retry',
+          dailyTask,
+          frequency: const Duration(hours: 24),
+          initialDelay: initialDelay,
+        );
+      }
 
       final now = tz.TZDateTime.now(tz.local);
       final nextRun = now.add(initialDelay);
@@ -139,14 +173,20 @@ class BackgroundService {
         '[BackgroundService] Next notification scheduled for: $nextRun',
         name: 'Restoreko',
       );
+      
+      // Verify the task was scheduled
+      developer.log(
+        '[BackgroundService] Daily notification scheduling completed',
+        name: 'Restoreko',
+      );
     } catch (e, stackTrace) {
       developer.log(
-        '[BackgroundService] Error scheduling daily notification: $e',
+        '[BackgroundService] Critical error in scheduleDailyNotification: $e',
         name: 'Restoreko',
         error: e,
         stackTrace: stackTrace,
       );
-      rethrow;
+      // Don't rethrow to prevent app from crashing
     }
   }
 

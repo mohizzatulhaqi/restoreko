@@ -1,3 +1,5 @@
+import 'dart:async' show runZonedGuarded;
+import 'package:workmanager/workmanager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,7 +15,6 @@ import 'package:restoreko/providers/theme_provider.dart';
 import 'package:restoreko/services/notification_service.dart';
 import 'package:restoreko/providers/settings_provider.dart';
 import 'package:restoreko/services/background_service.dart';
-import 'package:workmanager/workmanager.dart';
 
 /// Dispatcher untuk task background
 void callbackDispatcher() {
@@ -29,49 +30,83 @@ void callbackDispatcher() {
   });
 }
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+Future<void> _initializeApp() async {
   const enableWorkmanager = bool.fromEnvironment(
     'ENABLE_WORKMANAGER',
     defaultValue: true,
   );
 
+  debugPrint('Starting app initialization...');
+
   try {
     // Initialize database
+    debugPrint('Initializing database...');
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
-    debugPrint('Database initialized successfully');
+    debugPrint('✓ Database initialized successfully');
 
     // Initialize notification service
+    debugPrint('Initializing notification service...');
     final notificationService = NotificationService();
     await notificationService.initialize();
+    debugPrint('✓ Notification service initialized');
 
     // Initialize settings provider
+    debugPrint('Loading settings...');
     final settingsProvider = SettingsProvider();
     await settingsProvider.loadSettings();
+    debugPrint('✓ Settings loaded');
 
-    // Initialize background service
-    await BackgroundService.initialize();
-
-    // Initialize WorkManager (jika tidak di-disable via dart-define)
+    // Initialize background service and WorkManager
     if (enableWorkmanager) {
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      debugPrint('Initializing background services...');
+      try {
+        await BackgroundService.initialize();
 
-      // Schedule or cancel notifications based on settings
-      if (settingsProvider.isDailyReminderEnabled) {
-        await BackgroundService.scheduleDailyNotification();
-      } else {
-        await BackgroundService.cancelDailyNotification();
+        // Schedule or cancel notifications based on settings
+        if (settingsProvider.isDailyReminderEnabled) {
+          debugPrint('Scheduling daily notifications...');
+          await BackgroundService.scheduleDailyNotification();
+        } else {
+          debugPrint('Cancelling any scheduled notifications...');
+          await BackgroundService.cancelDailyNotification();
+        }
+        debugPrint('✓ Background services initialized');
+      } catch (e, stackTrace) {
+        debugPrint('⚠️ Error initializing background services: $e');
+        debugPrint('Stack trace: $stackTrace');
+        // Continue with app initialization even if background services fail
       }
+    } else {
+      debugPrint('Background services are disabled');
     }
 
-    debugPrint('All services initialized successfully');
-  } catch (e) {
-    debugPrint('Initialization error: $e');
+    debugPrint('✓ All services initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('❌ Critical initialization error: $e');
+    debugPrint('Stack trace: $stackTrace');
+    // Continue with app initialization even if there are errors
   }
+}
 
-  runApp(const MyApp());
+void main() {
+  // Run the app in a zone
+  runZonedGuarded(
+    () async {
+      // Initialize binding inside the zone
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Initialize services in background (non-blocking)
+      _initializeApp();
+
+      // Run the app immediately
+      runApp(const MyApp());
+    },
+    (error, stackTrace) {
+      debugPrint('Uncaught error in main zone: $error');
+      debugPrint('Stack trace: $stackTrace');
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -93,19 +128,21 @@ class MyApp extends StatelessWidget {
 
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
     final restaurantService = RestaurantService();
-
+    
     return MultiProvider(
       providers: [
-        Provider<RestaurantService>(create: (_) => restaurantService),
-        ChangeNotifierProvider(
-          create: (context) =>
-              RestaurantProvider(service: context.read<RestaurantService>())
-                ..fetchRestaurants(),
+        // Create RestaurantService as a regular provider
+        Provider<RestaurantService>(
+          create: (_) => restaurantService,
         ),
+        // Use ChangeNotifierProvider for RestaurantProvider
         ChangeNotifierProvider(
-          create: (context) => RestaurantDetailProvider(
-            service: context.read<RestaurantService>(),
-          ),
+          create: (context) => RestaurantProvider(service: restaurantService)
+            ..fetchRestaurants(),
+        ),
+        // Use ChangeNotifierProvider for RestaurantDetailProvider
+        ChangeNotifierProvider(
+          create: (context) => RestaurantDetailProvider(service: restaurantService),
         ),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),

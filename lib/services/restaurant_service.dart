@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../models/api_result.dart';
-import '../models/restaurant.dart' show Restaurant;
+import '../models/restaurant.dart';
 
 class RestaurantService {
   static const String baseUrl = 'https://restaurant-api.dicoding.dev';
@@ -36,7 +34,6 @@ class RestaurantService {
   Future<ApiResult> searchRestaurants(String query) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/search?q=$query'));
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return ApiResult.fromJson(data);
@@ -73,25 +70,31 @@ class RestaurantService {
           .post(
             Uri.parse('$baseUrl/review'),
             headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'id': id,
-              'name': name,
-              'review': review,
-            }),
+            body: json.encode({'id': id, 'name': name, 'review': review}),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 15)); // Increased timeout
+
+      print('Review submission response: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        
-        if (data['error'] == false && data['customerReviews'] != null) {
-          // Fetch the latest restaurant data
-          final updatedRestaurant = await fetchRestaurantDetail(id);
-          return updatedRestaurant;
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['error'] == false) {
+          // Add a small delay to ensure server has processed the review
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // Fetch the complete restaurant data to ensure we have the latest reviews
+          return await fetchRestaurantDetail(id);
+        } else {
+          throw Exception(
+            'Gagal mengirim ulasan: ${responseData['message'] ?? 'Terjadi kesalahan'}',
+          );
         }
-        throw Exception('Gagal memuat ulasan terbaru');
       } else if (response.statusCode == 400) {
-        throw Exception('Permintaan tidak valid. Silakan periksa input Anda.');
+        final responseData = json.decode(response.body);
+        throw Exception(
+          'Permintaan tidak valid: ${responseData['message'] ?? 'Silakan periksa input Anda.'}',
+        );
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw Exception('Gagal autentikasi. Silakan coba lagi.');
       } else if (response.statusCode >= 500) {
@@ -99,13 +102,17 @@ class RestaurantService {
       } else {
         throw Exception('Gagal ${response.statusCode}');
       }
-    } on FormatException {
+    } on FormatException catch (e) {
+      print('Format exception: $e');
       throw Exception('Respons tidak valid dari server');
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      print('Timeout exception: $e');
       throw Exception('Permintaan habis waktu. Harap periksa koneksi Anda.');
-    } on http.ClientException {
+    } on http.ClientException catch (e) {
+      print('Client exception: $e');
       throw Exception('Kesalahan jaringan. Harap periksa koneksi Anda.');
     } catch (e) {
+      print('Unexpected error: $e');
       throw Exception('Terjadi kesalahan tak terduga: ${e.toString()}');
     }
   }
