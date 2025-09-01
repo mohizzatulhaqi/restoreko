@@ -13,6 +13,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -47,4 +48,5 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.8.1")
     implementation("androidx.concurrent:concurrent-futures-ktx:1.1.0")
     implementation("com.google.guava:guava:31.1-android")
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'flutter clean
 }
