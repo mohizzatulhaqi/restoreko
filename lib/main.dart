@@ -59,42 +59,55 @@ Future<void> _initializeApp() async {
     // Initialize background service and WorkManager
     if (enableWorkmanager) {
       debugPrint('Initializing background services...');
+
       try {
         await BackgroundService.initialize();
+        debugPrint('✓ Workmanager initialized successfully');
 
+        // Only schedule notifications if Workmanager was successfully initialized
         if (settingsProvider.isDailyReminderEnabled) {
           debugPrint('Scheduling daily notifications...');
           await BackgroundService.scheduleDailyNotification();
+          debugPrint('✓ Daily notifications scheduled');
         } else {
           debugPrint('Cancelling any scheduled notifications...');
           await BackgroundService.cancelDailyNotification();
+          debugPrint('✓ Scheduled notifications cancelled');
         }
-        debugPrint('✓ Background services initialized');
+
       } catch (e, stackTrace) {
-        debugPrint('⚠️ Error initializing background services: $e');
+        debugPrint('❌ Failed to initialize WorkManager: $e');
+        debugPrint('The app will continue without background notifications');
         debugPrint('Stack trace: $stackTrace');
+
+        // You can check BackgroundService.isWorkingProperly() in your UI
+        // to show appropriate messages to users about notification availability
       }
     } else {
       debugPrint('Background services are disabled');
     }
 
-    debugPrint('✓ All services initialized successfully');
+    debugPrint('✓ App initialization completed');
   } catch (e, stackTrace) {
     debugPrint('❌ Critical initialization error: $e');
     debugPrint('Stack trace: $stackTrace');
+    // Don't rethrow - let the app continue without background services
   }
 }
 
 void main() {
   runZonedGuarded(
-    () async {
+        () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      _initializeApp();
+      // Add a small delay to ensure platform is fully ready
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      await _initializeApp();
 
       runApp(const MyApp());
     },
-    (error, stackTrace) {
+        (error, stackTrace) {
       debugPrint('Uncaught error in main zone: $error');
       debugPrint('Stack trace: $stackTrace');
     },
@@ -120,7 +133,7 @@ class MyApp extends StatelessWidget {
 
     final baseTextTheme = GoogleFonts.poppinsTextTheme();
     final restaurantService = RestaurantService();
-    
+
     return MultiProvider(
       providers: [
         Provider<RestaurantService>(

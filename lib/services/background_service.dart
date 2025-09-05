@@ -46,7 +46,7 @@ void callbackDispatcher() {
       );
 
       await notificationService.showRandomRestaurantNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000, 
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: 'Rekomendasi Restoran',
         body: 'Coba restoran ${restaurant.name} di ${restaurant.city}',
       );
@@ -65,53 +65,143 @@ void callbackDispatcher() {
 
 class BackgroundService {
   static const String dailyTask = 'dailyRestaurantRecommendation';
+  static bool _isInitialized = false;
+  static bool _initializationFailed = false;
 
+  static bool get isInitialized => _isInitialized;
+  static bool get initializationFailed => _initializationFailed;
+
+  /// Initialize WorkManager with retry logic and better error handling
   static Future<void> initialize() async {
+    if (_isInitialized) {
+      developer.log(
+        '[BackgroundService] Already initialized, skipping...',
+        name: 'Restoreko',
+      );
+      return;
+    }
+
+    if (_initializationFailed) {
+      developer.log(
+        '[BackgroundService] Previous initialization failed, not retrying',
+        name: 'Restoreko',
+      );
+      throw Exception('BackgroundService initialization previously failed');
+    }
+
+    const maxRetries = 3;
+    int retryCount = 0;
+
+    while (retryCount < maxRetries && !_isInitialized) {
+      try {
+        retryCount++;
+        developer.log(
+          '[BackgroundService] Initializing Workmanager... (attempt $retryCount/$maxRetries)',
+          name: 'Restoreko',
+        );
+
+        // Add progressive delay between retries
+        if (retryCount > 1) {
+          final delayMs = 300 * retryCount; // 300ms, 600ms, 900ms
+          developer.log(
+            '[BackgroundService] Waiting ${delayMs}ms before retry...',
+            name: 'Restoreko',
+          );
+          await Future.delayed(Duration(milliseconds: delayMs));
+        }
+
+        // Try to safely cancel existing work first
+        await _safeCancelAll(retryCount == 1);
+
+        // Initialize with a small delay to ensure platform channels are ready
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        await Workmanager().initialize(
+            callbackDispatcher,
+            isInDebugMode: false
+        );
+
+        _isInitialized = true;
+        developer.log(
+          '[BackgroundService] Workmanager initialized successfully on attempt $retryCount',
+          name: 'Restoreko',
+        );
+
+        break; // Exit retry loop on success
+
+      } catch (e, stackTrace) {
+        developer.log(
+          '[BackgroundService] Initialization attempt $retryCount failed: $e',
+          name: 'Restoreko',
+          error: e,
+        );
+
+        if (retryCount >= maxRetries) {
+          _initializationFailed = true;
+          developer.log(
+            '[BackgroundService] All initialization attempts failed. WorkManager will be disabled.',
+            name: 'Restoreko',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          rethrow;
+        }
+      }
+    }
+
+    developer.log(
+      '[BackgroundService] Workmanager initialization completed',
+      name: 'Restoreko',
+    );
+  }
+
+  /// Safely attempt to cancel all work with error handling
+  static Future<void> _safeCancelAll(bool logErrors) async {
     try {
-      developer.log(
-        '[BackgroundService] Initializing Workmanager...',
-        name: 'Restoreko',
-      );
-
       await Workmanager().cancelAll();
-
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-
-      developer.log(
-        '[BackgroundService] Workmanager initialized successfully',
-        name: 'Restoreko',
-      );
-
-      developer.log(
-        '[BackgroundService] Workmanager initialization completed',
-        name: 'Restoreko',
-      );
-    } catch (e, stackTrace) {
-      developer.log(
-        '[BackgroundService] Error initializing Workmanager: $e',
-        name: 'Restoreko',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      rethrow;
+      if (logErrors) {
+        developer.log(
+          '[BackgroundService] Successfully cancelled existing work',
+          name: 'Restoreko',
+        );
+      }
+    } catch (e) {
+      if (logErrors) {
+        developer.log(
+          '[BackgroundService] Could not cancel existing work (might be expected): $e',
+          name: 'Restoreko',
+        );
+      }
+      // Don't rethrow - this is expected in some cases
     }
   }
 
   static Future<void> scheduleDailyNotification() async {
+    if (!_isInitialized) {
+      developer.log(
+        '[BackgroundService] Cannot schedule notification: WorkManager not initialized',
+        name: 'Restoreko',
+      );
+      return;
+    }
+
+    if (_initializationFailed) {
+      developer.log(
+        '[BackgroundService] Cannot schedule notification: WorkManager initialization failed',
+        name: 'Restoreko',
+      );
+      return;
+    }
+
     try {
       developer.log(
         '[BackgroundService] Starting to schedule daily notification...',
         name: 'Restoreko',
       );
 
-      await Workmanager().cancelAll();
-
-      await Future.delayed(const Duration(seconds: 1));
-
-      developer.log(
-        '[BackgroundService] Cancelled any existing tasks',
-        name: 'Restoreko',
-      );
+      // Safe cancel with error handling
+      await _safeCancelAll(true);
+      await Future.delayed(const Duration(milliseconds: 500));
 
       final initialDelay = _calculateInitialDelay();
       developer.log(
@@ -119,6 +209,8 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
+      // Primary registration attempt
+      bool registrationSucceeded = false;
       try {
         await Workmanager().registerPeriodicTask(
           dailyTask,
@@ -137,35 +229,58 @@ class BackgroundService {
           backoffPolicyDelay: const Duration(minutes: 5),
         );
 
+        registrationSucceeded = true;
         developer.log(
           '[BackgroundService] Successfully registered periodic task',
           name: 'Restoreko',
         );
+
       } catch (e) {
         developer.log(
-          '[BackgroundService] Error in registerPeriodicTask: $e',
+          '[BackgroundService] Primary registration failed: $e',
           name: 'Restoreko',
           error: e,
         );
-        await Workmanager().registerPeriodicTask(
-          '${dailyTask}_retry',
-          dailyTask,
-          frequency: const Duration(hours: 24),
-          initialDelay: initialDelay,
+
+        // Fallback: Try with simpler configuration
+        try {
+          await Future.delayed(const Duration(milliseconds: 500));
+          await Workmanager().registerPeriodicTask(
+            '${dailyTask}_simple',
+            dailyTask,
+            frequency: const Duration(hours: 24),
+            initialDelay: initialDelay,
+            existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+          );
+
+          registrationSucceeded = true;
+          developer.log(
+            '[BackgroundService] Fallback registration succeeded',
+            name: 'Restoreko',
+          );
+        } catch (fallbackError) {
+          developer.log(
+            '[BackgroundService] Fallback registration also failed: $fallbackError',
+            name: 'Restoreko',
+            error: fallbackError,
+          );
+        }
+      }
+
+      if (registrationSucceeded) {
+        final now = tz.TZDateTime.now(tz.local);
+        final nextRun = now.add(initialDelay);
+        developer.log(
+          '[BackgroundService] Next notification scheduled for: $nextRun',
+          name: 'Restoreko',
         );
       }
 
-      final now = tz.TZDateTime.now(tz.local);
-      final nextRun = now.add(initialDelay);
       developer.log(
-        '[BackgroundService] Next notification scheduled for: $nextRun',
+        '[BackgroundService] Daily notification scheduling completed (success: $registrationSucceeded)',
         name: 'Restoreko',
       );
 
-      developer.log(
-        '[BackgroundService] Daily notification scheduling completed',
-        name: 'Restoreko',
-      );
     } catch (e, stackTrace) {
       developer.log(
         '[BackgroundService] Critical error in scheduleDailyNotification: $e',
@@ -173,6 +288,7 @@ class BackgroundService {
         error: e,
         stackTrace: stackTrace,
       );
+      // Don't rethrow - app should continue working
     }
   }
 
@@ -212,6 +328,14 @@ class BackgroundService {
   }
 
   static Future<void> cancelDailyNotification() async {
+    if (!_isInitialized) {
+      developer.log(
+        '[BackgroundService] Cannot cancel notification: WorkManager not initialized',
+        name: 'Restoreko',
+      );
+      return;
+    }
+
     try {
       developer.log(
         '[BackgroundService] Starting to cancel all scheduled notifications...',
@@ -231,7 +355,22 @@ class BackgroundService {
         error: e,
         stackTrace: stackTrace,
       );
-      rethrow;
+      // Don't rethrow - app should continue working
     }
+  }
+
+  /// Check if background services are working properly
+  static Future<bool> isWorkingProperly() async {
+    return _isInitialized && !_initializationFailed;
+  }
+
+  /// Reset the initialization state (useful for testing or manual retry)
+  static void resetInitializationState() {
+    _isInitialized = false;
+    _initializationFailed = false;
+    developer.log(
+      '[BackgroundService] Initialization state reset',
+      name: 'Restoreko',
+    );
   }
 }
