@@ -71,7 +71,6 @@ class BackgroundService {
   static bool get isInitialized => _isInitialized;
   static bool get initializationFailed => _initializationFailed;
 
-  /// Initialize WorkManager with retry logic and better error handling
   static Future<void> initialize() async {
     if (_isInitialized) {
       developer.log(
@@ -100,9 +99,8 @@ class BackgroundService {
           name: 'Restoreko',
         );
 
-        // Add progressive delay between retries
         if (retryCount > 1) {
-          final delayMs = 300 * retryCount; // 300ms, 600ms, 900ms
+          final delayMs = 300 * retryCount;
           developer.log(
             '[BackgroundService] Waiting ${delayMs}ms before retry...',
             name: 'Restoreko',
@@ -110,15 +108,13 @@ class BackgroundService {
           await Future.delayed(Duration(milliseconds: delayMs));
         }
 
-        // Try to safely cancel existing work first
         await _safeCancelAll(retryCount == 1);
 
-        // Initialize with a small delay to ensure platform channels are ready
         await Future.delayed(const Duration(milliseconds: 100));
 
         await Workmanager().initialize(
-            callbackDispatcher,
-            isInDebugMode: false
+          callbackDispatcher,
+          isInDebugMode: false,
         );
 
         _isInitialized = true;
@@ -127,8 +123,7 @@ class BackgroundService {
           name: 'Restoreko',
         );
 
-        break; // Exit retry loop on success
-
+        break;
       } catch (e, stackTrace) {
         developer.log(
           '[BackgroundService] Initialization attempt $retryCount failed: $e',
@@ -155,7 +150,6 @@ class BackgroundService {
     );
   }
 
-  /// Safely attempt to cancel all work with error handling
   static Future<void> _safeCancelAll(bool logErrors) async {
     try {
       await Workmanager().cancelAll();
@@ -172,7 +166,6 @@ class BackgroundService {
           name: 'Restoreko',
         );
       }
-      // Don't rethrow - this is expected in some cases
     }
   }
 
@@ -199,7 +192,6 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      // Safe cancel with error handling
       await _safeCancelAll(true);
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -209,7 +201,6 @@ class BackgroundService {
         name: 'Restoreko',
       );
 
-      // Primary registration attempt
       bool registrationSucceeded = false;
       try {
         await Workmanager().registerPeriodicTask(
@@ -234,7 +225,6 @@ class BackgroundService {
           '[BackgroundService] Successfully registered periodic task',
           name: 'Restoreko',
         );
-
       } catch (e) {
         developer.log(
           '[BackgroundService] Primary registration failed: $e',
@@ -242,7 +232,6 @@ class BackgroundService {
           error: e,
         );
 
-        // Fallback: Try with simpler configuration
         try {
           await Future.delayed(const Duration(milliseconds: 500));
           await Workmanager().registerPeriodicTask(
@@ -280,7 +269,6 @@ class BackgroundService {
         '[BackgroundService] Daily notification scheduling completed (success: $registrationSucceeded)',
         name: 'Restoreko',
       );
-
     } catch (e, stackTrace) {
       developer.log(
         '[BackgroundService] Critical error in scheduleDailyNotification: $e',
@@ -288,7 +276,6 @@ class BackgroundService {
         error: e,
         stackTrace: stackTrace,
       );
-      // Don't rethrow - app should continue working
     }
   }
 
@@ -355,16 +342,13 @@ class BackgroundService {
         error: e,
         stackTrace: stackTrace,
       );
-      // Don't rethrow - app should continue working
     }
   }
 
-  /// Check if background services are working properly
   static Future<bool> isWorkingProperly() async {
     return _isInitialized && !_initializationFailed;
   }
 
-  /// Reset the initialization state (useful for testing or manual retry)
   static void resetInitializationState() {
     _isInitialized = false;
     _initializationFailed = false;

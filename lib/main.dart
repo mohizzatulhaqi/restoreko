@@ -38,25 +38,21 @@ Future<void> _initializeApp() async {
   debugPrint('Starting app initialization...');
 
   try {
-    // Initialize database
     debugPrint('Initializing database...');
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
     debugPrint('✓ Database initialized successfully');
 
-    // Initialize notification service
     debugPrint('Initializing notification service...');
     final notificationService = NotificationService();
     await notificationService.initialize();
     debugPrint('✓ Notification service initialized');
 
-    // Initialize settings provider
     debugPrint('Loading settings...');
     final settingsProvider = SettingsProvider();
     await settingsProvider.loadSettings();
     debugPrint('✓ Settings loaded');
 
-    // Initialize background service and WorkManager
     if (enableWorkmanager) {
       debugPrint('Initializing background services...');
 
@@ -64,7 +60,6 @@ Future<void> _initializeApp() async {
         await BackgroundService.initialize();
         debugPrint('✓ Workmanager initialized successfully');
 
-        // Only schedule notifications if Workmanager was successfully initialized
         if (settingsProvider.isDailyReminderEnabled) {
           debugPrint('Scheduling daily notifications...');
           await BackgroundService.scheduleDailyNotification();
@@ -74,14 +69,10 @@ Future<void> _initializeApp() async {
           await BackgroundService.cancelDailyNotification();
           debugPrint('✓ Scheduled notifications cancelled');
         }
-
       } catch (e, stackTrace) {
         debugPrint('❌ Failed to initialize WorkManager: $e');
         debugPrint('The app will continue without background notifications');
         debugPrint('Stack trace: $stackTrace');
-
-        // You can check BackgroundService.isWorkingProperly() in your UI
-        // to show appropriate messages to users about notification availability
       }
     } else {
       debugPrint('Background services are disabled');
@@ -91,23 +82,21 @@ Future<void> _initializeApp() async {
   } catch (e, stackTrace) {
     debugPrint('❌ Critical initialization error: $e');
     debugPrint('Stack trace: $stackTrace');
-    // Don't rethrow - let the app continue without background services
   }
 }
 
 void main() {
   runZonedGuarded(
-        () async {
+    () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Add a small delay to ensure platform is fully ready
       await Future.delayed(const Duration(milliseconds: 100));
 
       await _initializeApp();
 
       runApp(const MyApp());
     },
-        (error, stackTrace) {
+    (error, stackTrace) {
       debugPrint('Uncaught error in main zone: $error');
       debugPrint('Stack trace: $stackTrace');
     },
@@ -136,15 +125,15 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        Provider<RestaurantService>(
-          create: (_) => restaurantService,
+        Provider<RestaurantService>(create: (_) => restaurantService),
+        ChangeNotifierProvider(
+          create: (context) =>
+              RestaurantProvider(service: restaurantService)
+                ..fetchRestaurants(),
         ),
         ChangeNotifierProvider(
-          create: (context) => RestaurantProvider(service: restaurantService)
-            ..fetchRestaurants(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => RestaurantDetailProvider(service: restaurantService),
+          create: (context) =>
+              RestaurantDetailProvider(service: restaurantService),
         ),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
