@@ -1,16 +1,28 @@
-# restoreko
+# 🍽️ Restoreko
 
-A new Flutter project.
+Restoreko is a Flutter-based mobile app for restaurant recommendations.
+This app helps users find the best restaurants, view menu details, read and add reviews, and save their favorites.
 
-## Getting Started
+## ✨ Key Features
 
-This project is a starting point for a Flutter application.
+- 🔎 **Restaurant Search** – search for restaurants by name or location.
+- 📍 **Restaurant Details** – complete information: name, address, rating, category, food & drink menu, description.
+- ⭐ **Reviews & Reviews** – read other users' reviews or add your own.
+- ❤️ **Favorites** – save your favorite restaurants for easy access.
+- ⚙️ **Settings** – dark mode support 🌙, lunch notifications (11:00 WIB), and daily restaurant recommendations (18:00 WIB).
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 How to Run
+Clone this repository
+ ```bash
+git clone https://github.com/username/restoreko.git
+cd restoreko
+flutter pub get
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠️ Technologies Used
+Flutter
+State Management (Provider)
+Local Storage (for favorite features)
+Push Notification and workmanager (for daily notifications)
